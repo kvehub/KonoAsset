@@ -43,9 +43,9 @@ export const useQuickTagModeStore = create<Props>((set, get) => ({
   },
 
   toggle: async (assetId: string) => {
-    const { activeTag, taggedIds, pendingIds } = get()
+    const { activeTag, taggedIds, pendingIds, loading } = get()
 
-    if (activeTag === null || pendingIds.has(assetId)) {
+    if (activeTag === null || loading || pendingIds.has(assetId)) {
       return null
     }
 
@@ -64,13 +64,18 @@ export const useQuickTagModeStore = create<Props>((set, get) => ({
       return { taggedIds: nextTagged, pendingIds: nextPending }
     })
 
-    const result = await setAssetTag(assetId, activeTag, !wasTagged)
-
-    set((state) => {
-      const nextPending = new Set(state.pendingIds)
-      nextPending.delete(assetId)
-      return { pendingIds: nextPending }
-    })
+    let result: Result<boolean, string>
+    try {
+      result = await setAssetTag(assetId, activeTag, !wasTagged)
+    } catch (e) {
+      result = { status: 'error', error: String(e) }
+    } finally {
+      set((state) => {
+        const nextPending = new Set(state.pendingIds)
+        nextPending.delete(assetId)
+        return { pendingIds: nextPending }
+      })
+    }
 
     if (result.status === 'error') {
       // 巻き戻し(モードが継続している場合のみ)

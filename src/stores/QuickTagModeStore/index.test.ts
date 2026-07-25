@@ -130,4 +130,38 @@ describe('toggle', () => {
     expect(result).toBeNull()
     expect(mockedSetAssetTag).not.toHaveBeenCalled()
   })
+
+  it('setAssetTag が例外を投げた場合、エラー Result を返し reject しない', async () => {
+    const error = new Error('Network failure')
+    mockedSetAssetTag.mockRejectedValue(error)
+
+    const result = await useQuickTagModeStore.getState().toggle('id-new')
+
+    expect(result).toEqual({ status: 'error', error: 'Error: Network failure' })
+    expect(useQuickTagModeStore.getState().taggedIds.has('id-new')).toBe(false)
+    expect(useQuickTagModeStore.getState().pendingIds.has('id-new')).toBe(false)
+    expect(mockRefreshFilteredIds).not.toHaveBeenCalled()
+  })
+
+  it('loading 中 (enable のフェッチ未解決) の toggle は無視される', async () => {
+    let resolveGetTaggedAssetIds: (value: string[]) => void
+    mockedGetTaggedAssetIds.mockReturnValue(
+      new Promise((resolve) => {
+        resolveGetTaggedAssetIds = resolve
+      }),
+    )
+
+    // enable を開始するが解決させない
+    const enablePromise = useQuickTagModeStore.getState().enable('target')
+
+    // loading = true のうちに toggle
+    const result = await useQuickTagModeStore.getState().toggle('id-new')
+
+    expect(result).toBeNull()
+    expect(mockedSetAssetTag).not.toHaveBeenCalled()
+
+    // enable を完了させる
+    resolveGetTaggedAssetIds!(['id-tagged'])
+    await enablePromise
+  })
 })
