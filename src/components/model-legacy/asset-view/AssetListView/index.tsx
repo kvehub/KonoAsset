@@ -6,6 +6,7 @@ import { NotebookText } from 'lucide-react'
 import { RowVirtualScroll } from '@/components/ui/virtual-scroll'
 import { useMemoDialogStore } from '@/stores/dialogs/MemoDialogStore'
 import { AssetCardMeatballMenu } from '@/components/models/asset-card/AssetCardMeatballMenu'
+import { QuickTagToggleButton } from '@/components/models/quick-tag/QuickTagToggleButton/QuickTagToggleButton'
 
 type Props = {
   sortedAssetSummary: AssetSummary[]
@@ -21,6 +22,7 @@ export const AssetListView = ({
   const renderAssetItem = (asset: AssetSummary) => (
     <SlimAssetDetail key={asset.id} asset={asset}>
       <div className="flex flex-row items-center gap-4">
+        <QuickTagToggleButton assetId={asset.id} />
         {asset.hasMemo && (
           <Button
             variant="outline"
