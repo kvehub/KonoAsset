@@ -54,10 +54,17 @@ export const useQuickTagModeButton = (): ReturnProps => {
     [enable],
   )
 
+  const onPopoverOpenChange = useCallback((open: boolean) => {
+    setPopoverOpen(open)
+    if (!open) {
+      setInputValue('')
+    }
+  }, [])
+
   return {
     activeTag,
     popoverOpen,
-    setPopoverOpen,
+    setPopoverOpen: onPopoverOpenChange,
     inputValue,
     setInputValue,
     candidates,
