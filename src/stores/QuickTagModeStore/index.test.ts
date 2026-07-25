@@ -52,6 +52,17 @@ describe('enable / disable', () => {
     expect(useQuickTagModeStore.getState().taggedIds).toEqual(new Set())
   })
 
+  it('getTaggedAssetIds が reject した場合、activeTag はセットされ taggedIds は空、loading は false になる', async () => {
+    mockedGetTaggedAssetIds.mockRejectedValue(new Error('IPC failure'))
+
+    await useQuickTagModeStore.getState().enable('target')
+
+    const state = useQuickTagModeStore.getState()
+    expect(state.activeTag).toBe('target')
+    expect(state.taggedIds).toEqual(new Set())
+    expect(state.loading).toBe(false)
+  })
+
   it('disable でモードが解除される', async () => {
     mockedGetTaggedAssetIds.mockResolvedValue(['id-1'])
     await useQuickTagModeStore.getState().enable('target')

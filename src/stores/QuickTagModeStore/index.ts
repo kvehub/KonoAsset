@@ -23,7 +23,12 @@ export const useQuickTagModeStore = create<Props>((set, get) => ({
   enable: async (tag: string) => {
     set({ activeTag: tag, taggedIds: new Set(), loading: true })
 
-    const ids = await getTaggedAssetIds(tag)
+    let ids: string[] | null
+    try {
+      ids = await getTaggedAssetIds(tag)
+    } catch {
+      ids = null
+    }
 
     // 取得中にタグが切り替わっていたら反映しない
     if (get().activeTag !== tag) {

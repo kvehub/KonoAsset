@@ -72,16 +72,6 @@ export const InternalQuickTagModeButton: FC<Props> = ({
             />
             <CommandList>
               <CommandEmpty>{t('quicktag:popover:empty')}</CommandEmpty>
-              {showCreateItem && (
-                <CommandGroup>
-                  <CommandItem
-                    value={trimmedInput}
-                    onSelect={() => onSelectTag(trimmedInput)}
-                  >
-                    {t('quicktag:popover:create')} {trimmedInput}
-                  </CommandItem>
-                </CommandGroup>
-              )}
               <CommandGroup>
                 {candidates.map((tag) => (
                   <CommandItem
@@ -93,6 +83,16 @@ export const InternalQuickTagModeButton: FC<Props> = ({
                   </CommandItem>
                 ))}
               </CommandGroup>
+              {showCreateItem && (
+                <CommandGroup>
+                  <CommandItem
+                    value={trimmedInput}
+                    onSelect={() => onSelectTag(trimmedInput)}
+                  >
+                    {t('quicktag:popover:create')} {trimmedInput}
+                  </CommandItem>
+                </CommandGroup>
+              )}
             </CommandList>
           </Command>
         </PopoverContent>
