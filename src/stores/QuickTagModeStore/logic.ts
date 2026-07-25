@@ -1,8 +1,4 @@
-import {
-  AssetDescription,
-  commands,
-  Result,
-} from '@/lib/bindings'
+import { AssetDescription, commands, Result } from '@/lib/bindings'
 
 // 指定タグが付いている全アセットの ID を取得する (null = 取得失敗)
 export const getTaggedAssetIds = async (
