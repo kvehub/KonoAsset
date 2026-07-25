@@ -375,6 +375,13 @@
     "setup:button:done": "开始使用！",
 
     "ui:multi-select:create-new": "新建",
-    "ui:multi-select:not-selected-tooltip": "具有此属性的资产将不会显示"
+    "ui:multi-select:not-selected-tooltip": "具有此属性的资产将不会显示",
+
+    "quicktag:button:tooltip": "快速标签模式",
+    "quicktag:popover:placeholder": "选择或输入标签...",
+    "quicktag:popover:create": "新标签:",
+    "quicktag:popover:empty": "没有标签",
+    "quicktag:chip:exit": "退出标签模式",
+    "quicktag:toast:failed": "更新标签失败"
   }
 }
