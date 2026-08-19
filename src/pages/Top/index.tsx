@@ -9,6 +9,7 @@ import { useCallback } from 'react'
 import { AssetView } from '@/components/model-legacy/asset-view/AssetView'
 import { StatusBar } from '@/components/models/status-bar/StatusBar'
 import { DataManagementDialog } from '@/components/models/data-management-dialog/DataManagementDialog'
+import { useAssetSummaryViewStore } from '@/stores/AssetSummaryViewStore'
 
 export const TopPage = () => {
   const {
@@ -21,18 +22,34 @@ export const TopPage = () => {
     setEditAssetDialogOpen,
     editAssetDialogAssetId,
     editAssetDialogOpen,
+    editAssetDialogAssetData,
+    setEditAssetDialogAssetData,
   } = useTopPage()
 
   const { t } = useLocalization()
+
+  const sortedAssetSummaries = useAssetSummaryViewStore(
+    (state) => state.sortedAssetSummaries,
+  )
 
   const openEditAssetDialog = useCallback(
     (assetId: string) => {
       setAddAssetDialogOpen(false)
 
+      const assetData = sortedAssetSummaries.find(
+        (asset) => asset.id === assetId,
+      )
+      setEditAssetDialogAssetData(assetData ?? null)
       setEditAssetDialogAssetId(assetId)
       setEditAssetDialogOpen(true)
     },
-    [setAddAssetDialogOpen, setEditAssetDialogAssetId, setEditAssetDialogOpen],
+    [
+      setAddAssetDialogOpen,
+      setEditAssetDialogAssetData,
+      setEditAssetDialogAssetId,
+      setEditAssetDialogOpen,
+      sortedAssetSummaries,
+    ],
   )
 
   return (
@@ -52,6 +69,7 @@ export const TopPage = () => {
           />
           <EditAssetDialog
             id={editAssetDialogAssetId}
+            assetData={editAssetDialogAssetData}
             dialogOpen={editAssetDialogOpen}
             setDialogOpen={setEditAssetDialogOpen}
           />

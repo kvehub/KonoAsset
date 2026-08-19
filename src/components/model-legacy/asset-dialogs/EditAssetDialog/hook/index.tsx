@@ -1,7 +1,7 @@
-import { AssetDescription, AssetType } from '@/lib/bindings'
+import { AssetDescription, AssetSummary, AssetType } from '@/lib/bindings'
 import { AssetFormType } from '@/lib/form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { fetchAssetInformation, updateAsset } from '../logic'
@@ -26,6 +26,7 @@ const setDescriptionToForm = (
 
 type Props = {
   id: string | null
+  assetData: AssetSummary | null
   dialogOpen: boolean
   setDialogOpen: (open: boolean) => void
 }
@@ -43,13 +44,15 @@ type ReturnProps = {
 
 export const useEditAssetDialog = ({
   id,
+  assetData,
   dialogOpen,
   setDialogOpen,
 }: Props): ReturnProps => {
-  const [tab, setTab] = useState('booth-input')
+  const [tab, setTab] = useState('manual-input')
   const [imageUrls, setImageUrls] = useState<string[]>([])
   const [loadingAssetData, setLoadingAssetData] = useState(true)
   const [submitting, setSubmitting] = useState(false)
+  const requestGeneration = useRef(0)
 
   const refreshAssetSummaries = useAssetSummaryViewStore(
     (state) => state.refreshAssetSummaries,
@@ -110,6 +113,8 @@ export const useEditAssetDialog = ({
       imageFilename: null,
       boothItemId: null,
       tags: [],
+      memo: null,
+      dependencies: [],
       category: '',
       supportedAvatars: [],
       publishedAt: null,
@@ -121,73 +126,109 @@ export const useEditAssetDialog = ({
   useEffect(() => {
     if (!dialogOpen) {
       // 閉じるときにタブが変わってしまうのが見えるため遅延を入れる
-      setTimeout(() => {
+      requestGeneration.current += 1
+      const timeoutId = setTimeout(() => {
         clearForm()
-        setTab('booth-input')
+        setTab('manual-input')
         setLoadingAssetData(true)
       }, 500)
+
+      return () => clearTimeout(timeoutId)
     }
   }, [dialogOpen, clearForm])
 
   const loadAssetData = useCallback(
     async (id: string) => {
-      setLoadingAssetData(true)
-      const result = await fetchAssetInformation(id)
+      const generation = ++requestGeneration.current
+      const isCurrentRequest = () =>
+        generation === requestGeneration.current && dialogOpen
 
-      if (result.status === 'error') {
-        toast({
-          title: t('addasset:get:error-toast'),
-          description: result.error,
+      setTab('manual-input')
+
+      if (assetData?.id === id) {
+        form.reset({
+          assetType: assetData.assetType,
+          name: assetData.name,
+          creator: assetData.creator,
+          imageFilename: assetData.imageFilename,
+          boothItemId: assetData.boothItemId,
+          tags: [],
+          memo: null,
+          dependencies: assetData.dependencies,
+          category: assetData.category ?? '',
+          supportedAvatars: [],
+          publishedAt: assetData.publishedAt,
         })
-        return
-      }
-
-      const data = result.data
-
-      if (data.assetType === 'Avatar') {
-        const avatar = data.avatar!
-
-        form.setValue('assetType', 'Avatar')
-        setDescriptionToForm(form, avatar.description)
-      } else if (data.assetType === 'AvatarWearable') {
-        const avatarWearable = data.avatarWearable!
-
-        form.setValue('assetType', 'AvatarWearable')
-        form.setValue('category', avatarWearable.category)
-        form.setValue('supportedAvatars', avatarWearable.supportedAvatars)
-        setDescriptionToForm(form, avatarWearable.description)
-      } else if (data.assetType === 'WorldObject') {
-        const worldObject = data.worldObject!
-
-        form.setValue('assetType', 'WorldObject')
-        form.setValue('category', worldObject.category)
-        setDescriptionToForm(form, worldObject.description)
-      } else if (data.assetType === 'OtherAsset') {
-        const otherAsset = data.otherAsset!
-
-        form.setValue('assetType', 'OtherAsset')
-        form.setValue('category', otherAsset.category)
-        setDescriptionToForm(form, otherAsset.description)
+        // 一覧のサマリーで編集画面を先に表示し、詳細情報は後から補完する。
+        setLoadingAssetData(false)
       } else {
-        toast({
-          title: t('addasset:get:error-toast'),
-          description: t('addasset:get:error-toast:unknown-asset-type'),
-        })
-
-        setDialogOpen(false)
-        return
+        clearForm()
+        setLoadingAssetData(true)
       }
 
-      setLoadingAssetData(false)
+      try {
+        const result = await fetchAssetInformation(id)
+
+        if (!isCurrentRequest()) {
+          return
+        }
+
+        if (result.status === 'error') {
+          toast({
+            title: t('addasset:get:error-toast'),
+            description: result.error,
+          })
+          return
+        }
+
+        const data = result.data
+
+        if (data.assetType === 'Avatar') {
+          const avatar = data.avatar!
+
+          form.setValue('assetType', 'Avatar')
+          setDescriptionToForm(form, avatar.description)
+        } else if (data.assetType === 'AvatarWearable') {
+          const avatarWearable = data.avatarWearable!
+
+          form.setValue('assetType', 'AvatarWearable')
+          form.setValue('category', avatarWearable.category)
+          form.setValue('supportedAvatars', avatarWearable.supportedAvatars)
+          setDescriptionToForm(form, avatarWearable.description)
+        } else if (data.assetType === 'WorldObject') {
+          const worldObject = data.worldObject!
+
+          form.setValue('assetType', 'WorldObject')
+          form.setValue('category', worldObject.category)
+          setDescriptionToForm(form, worldObject.description)
+        } else if (data.assetType === 'OtherAsset') {
+          const otherAsset = data.otherAsset!
+
+          form.setValue('assetType', 'OtherAsset')
+          form.setValue('category', otherAsset.category)
+          setDescriptionToForm(form, otherAsset.description)
+        } else {
+          toast({
+            title: t('addasset:get:error-toast'),
+            description: t('addasset:get:error-toast:unknown-asset-type'),
+          })
+
+          setDialogOpen(false)
+        }
+      } finally {
+        if (isCurrentRequest()) {
+          setLoadingAssetData(false)
+        }
+      }
     },
-    [form, setDialogOpen, t, toast],
+    [assetData, clearForm, dialogOpen, form, setDialogOpen, t, toast],
   )
 
   useEffect(() => {
-    if (dialogOpen && loadingAssetData && id !== null) {
+    if (dialogOpen && id !== null) {
       loadAssetData(id)
     }
-  }, [dialogOpen, id, loadingAssetData, loadAssetData])
+  }, [dialogOpen, id, loadAssetData])
 
   const onSubmit = async () => {
     if (submitting || id === null) {

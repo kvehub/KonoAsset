@@ -9,14 +9,21 @@ import { useLocalization } from '@/hooks/use-localization'
 import { DialogTitle } from '@/components/ui/dialog'
 import { DialogDescription } from '@radix-ui/react-dialog'
 import { AssetTypeSelectorTab } from '../components/tabs/AssetTypeSelector'
+import { AssetSummary } from '@/lib/bindings'
 
 type Props = {
   id: string | null
+  assetData: AssetSummary | null
   dialogOpen: boolean
   setDialogOpen: (open: boolean) => void
 }
 
-export const EditAssetDialog = ({ id, dialogOpen, setDialogOpen }: Props) => {
+export const EditAssetDialog = ({
+  id,
+  assetData,
+  dialogOpen,
+  setDialogOpen,
+}: Props) => {
   const {
     loadingAssetData,
     form,
@@ -28,6 +35,7 @@ export const EditAssetDialog = ({ id, dialogOpen, setDialogOpen }: Props) => {
     submitting,
   } = useEditAssetDialog({
     id,
+    assetData,
     dialogOpen,
     setDialogOpen,
   })
@@ -74,7 +82,7 @@ export const EditAssetDialog = ({ id, dialogOpen, setDialogOpen }: Props) => {
         <ManualInputTab
           form={form}
           imageUrls={imageUrls}
-          onBackToPreviousTabClicked={() => setTab('asset-type-selector')}
+          onBackToPreviousTabClicked={() => setTab('booth-input')}
           onGoToNextTabClicked={() => setTab('additional-input')}
           tabIndex={3}
           totalTabs={4}

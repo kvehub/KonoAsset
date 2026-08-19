@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { onFileDrop } from './logic'
 import { useDragDropStore } from '@/stores/DragDropStore'
 import { DragDropHandler } from '@/stores/DragDropStore/index.types'
+import { AssetSummary } from '@/lib/bindings'
 
 type ReturnProps = {
   isDragAndHover: boolean
@@ -13,6 +14,8 @@ type ReturnProps = {
   setEditAssetDialogOpen: (open: boolean) => void
   editAssetDialogAssetId: string | null
   editAssetDialogOpen: boolean
+  editAssetDialogAssetData: AssetSummary | null
+  setEditAssetDialogAssetData: (asset: AssetSummary | null) => void
 }
 
 export const useTopPage = (): ReturnProps => {
@@ -21,6 +24,9 @@ export const useTopPage = (): ReturnProps => {
   const [editAssetDialogOpen, setEditAssetDialogOpen] = useState(false)
   const [editAssetDialogAssetId, setEditAssetDialogAssetId] = useState<
     string | null
+  >(null)
+  const [editAssetDialogAssetData, setEditAssetDialogAssetData] = useState<
+    AssetSummary | null
   >(null)
 
   const [showingAssetCount, setShowingAssetCount] = useState(0)
@@ -52,5 +58,7 @@ export const useTopPage = (): ReturnProps => {
     setEditAssetDialogOpen,
     editAssetDialogAssetId,
     editAssetDialogOpen,
+    editAssetDialogAssetData,
+    setEditAssetDialogAssetData,
   }
 }
