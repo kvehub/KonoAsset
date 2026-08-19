@@ -10,11 +10,20 @@ vi.mock('./logic', () => {
 })
 
 const mockRefreshFilteredIds = vi.fn()
+const mockUpdateAssetSummaryTags = vi.fn()
 
 vi.mock('@/stores/AssetFilterStore', () => {
   return {
     useAssetFilterStore: {
       getState: () => ({ refreshFilteredIds: mockRefreshFilteredIds }),
+    },
+  }
+})
+
+vi.mock('@/stores/AssetSummaryViewStore', () => {
+  return {
+    useAssetSummaryViewStore: {
+      getState: () => ({ updateAssetSummaryTags: mockUpdateAssetSummaryTags }),
     },
   }
 })
@@ -89,6 +98,11 @@ describe('toggle', () => {
     expect(result).toEqual({ status: 'ok', data: true })
     expect(mockedSetAssetTag).toHaveBeenCalledWith('id-new', 'target', true)
     expect(useQuickTagModeStore.getState().taggedIds.has('id-new')).toBe(true)
+    expect(mockUpdateAssetSummaryTags).toHaveBeenCalledWith(
+      'id-new',
+      'target',
+      true,
+    )
     expect(mockRefreshFilteredIds).toHaveBeenCalled()
   })
 
@@ -101,6 +115,11 @@ describe('toggle', () => {
     expect(useQuickTagModeStore.getState().taggedIds.has('id-tagged')).toBe(
       false,
     )
+    expect(mockUpdateAssetSummaryTags).toHaveBeenCalledWith(
+      'id-tagged',
+      'target',
+      false,
+    )
   })
 
   it('失敗時は楽観更新を巻き戻しエラーを返す', async () => {
@@ -110,6 +129,11 @@ describe('toggle', () => {
 
     expect(result).toEqual({ status: 'error', error: 'fail' })
     expect(useQuickTagModeStore.getState().taggedIds.has('id-new')).toBe(false)
+    expect(mockUpdateAssetSummaryTags).toHaveBeenLastCalledWith(
+      'id-new',
+      'target',
+      false,
+    )
     expect(mockRefreshFilteredIds).not.toHaveBeenCalled()
   })
 
@@ -151,6 +175,11 @@ describe('toggle', () => {
     expect(result).toEqual({ status: 'error', error: 'Error: Network failure' })
     expect(useQuickTagModeStore.getState().taggedIds.has('id-new')).toBe(false)
     expect(useQuickTagModeStore.getState().pendingIds.has('id-new')).toBe(false)
+    expect(mockUpdateAssetSummaryTags).toHaveBeenLastCalledWith(
+      'id-new',
+      'target',
+      false,
+    )
     expect(mockRefreshFilteredIds).not.toHaveBeenCalled()
   })
 

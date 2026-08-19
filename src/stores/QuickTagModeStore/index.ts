@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { Result } from '@/lib/bindings'
 import { getTaggedAssetIds, setAssetTag } from './logic'
 import { useAssetFilterStore } from '@/stores/AssetFilterStore'
+import { useAssetSummaryViewStore } from '@/stores/AssetSummaryViewStore'
 
 type Props = {
   activeTag: string | null
@@ -68,6 +69,9 @@ export const useQuickTagModeStore = create<Props>((set, get) => ({
       nextPending.add(assetId)
       return { taggedIds: nextTagged, pendingIds: nextPending }
     })
+    useAssetSummaryViewStore
+      .getState()
+      .updateAssetSummaryTags(assetId, activeTag, !wasTagged)
 
     let result: Result<boolean, string>
     try {
@@ -95,6 +99,9 @@ export const useQuickTagModeStore = create<Props>((set, get) => ({
           return { taggedIds: nextTagged }
         })
       }
+      useAssetSummaryViewStore
+        .getState()
+        .updateAssetSummaryTags(assetId, activeTag, wasTagged)
       return result
     }
 
