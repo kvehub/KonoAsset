@@ -6,7 +6,7 @@ import TextInputSelect, {
 } from '@/components/ui/text-input-select'
 import { commands } from '@/lib/bindings'
 import { AssetFormType } from '@/lib/form'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useLocalization } from '@/hooks/use-localization'
 import MultipleSelector, {
   Option as MultiSelectOption,
@@ -25,6 +25,8 @@ export const AvatarWearableLayout = ({ form }: Props) => {
     MultiSelectOption[]
   >([])
   const [tagCandidates, setTagCandidates] = useState<MultiSelectOption[]>([])
+  const tagRequestVersion = useRef(0)
+  const category = form.watch('category')
 
   const fetchSupportedAvatars = async () => {
     const result = await commands.getAvatarWearableSupportedAvatars(null)
@@ -58,8 +60,33 @@ export const AvatarWearableLayout = ({ form }: Props) => {
     )
   }
 
-  const fetchTagCandidates = async () => {
-    const result = await commands.getAllAssetTags(null)
+  const fetchTagCandidates = async (categoryValue: string) => {
+    const requestVersion = ++tagRequestVersion.current
+    const filterResult = await commands.getFilteredAssetIds({
+      assetType: 'AvatarWearable',
+      queryText: null,
+      categories: categoryValue
+        ? {
+            type: 'OR',
+            data: [{ type: 'Include', data: categoryValue }],
+          }
+        : null,
+      tags: null,
+      supportedAvatars: null,
+    })
+
+    let allowedIds: string[] | null = null
+    if (filterResult.status === 'ok') {
+      allowedIds = filterResult.data
+    } else {
+      console.error(filterResult.error)
+    }
+
+    const result = await commands.getAllAssetTags(allowedIds)
+
+    if (requestVersion !== tagRequestVersion.current) {
+      return
+    }
 
     if (result.status === 'error') {
       console.error(result.error)
@@ -78,8 +105,11 @@ export const AvatarWearableLayout = ({ form }: Props) => {
   useEffect(() => {
     fetchSupportedAvatars()
     fetchExistingCategories()
-    fetchTagCandidates()
   }, [])
+
+  useEffect(() => {
+    fetchTagCandidates(category)
+  }, [category])
 
   if (!form) {
     return <div>Loading...</div>

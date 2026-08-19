@@ -4,7 +4,7 @@ import { commands } from '@/lib/bindings'
 import { AssetFormType } from '@/lib/form'
 import { useLocalization } from '@/hooks/use-localization'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 type Props = {
   form: AssetFormType
@@ -13,9 +13,30 @@ type Props = {
 export const AvatarLayout = ({ form }: Props) => {
   const { t } = useLocalization()
   const [tagCandidates, setTagCandidates] = useState<Option[]>([])
+  const tagRequestVersion = useRef(0)
 
   const fetchTagCandidates = async () => {
-    const result = await commands.getAllAssetTags(null)
+    const requestVersion = ++tagRequestVersion.current
+    const filterResult = await commands.getFilteredAssetIds({
+      assetType: 'Avatar',
+      queryText: null,
+      categories: null,
+      tags: null,
+      supportedAvatars: null,
+    })
+
+    let allowedIds: string[] | null = null
+    if (filterResult.status === 'ok') {
+      allowedIds = filterResult.data
+    } else {
+      console.error(filterResult.error)
+    }
+
+    const result = await commands.getAllAssetTags(allowedIds)
+
+    if (requestVersion !== tagRequestVersion.current) {
+      return
+    }
 
     if (result.status === 'error') {
       console.error(result.error)
