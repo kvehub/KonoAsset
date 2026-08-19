@@ -9,6 +9,7 @@ import { ExternalLink, FolderTree, Pencil } from 'lucide-react'
 import { AssetCardTypeBadge } from '@/components/models/asset-card/AssetCardTypeBadge'
 import { useAssetCardMeatballMenu } from '@/components/models/asset-card/AssetCardMeatballMenu/hook'
 import { useAssetFilterStore } from '@/stores/AssetFilterStore'
+import { useQuickTagModeStore } from '@/stores/QuickTagModeStore'
 import { QuickTagToggleButton } from '@/components/models/quick-tag/QuickTagToggleButton/QuickTagToggleButton'
 
 type Props = {
@@ -25,6 +26,9 @@ export const CatalogCard: FC<Props> = ({ asset, ref, openEditAssetDialog }) => {
     boothItemID: asset.boothItemId ?? undefined,
   })
   const updateFilter = useAssetFilterStore((state) => state.updateFilter)
+  const quickTagModeActive = useQuickTagModeStore(
+    (state) => state.activeTag !== null,
+  )
 
   const onOpenFolder = () => {
     commands.openManagedDir(asset.id)
@@ -70,9 +74,17 @@ export const CatalogCard: FC<Props> = ({ asset, ref, openEditAssetDialog }) => {
         filename={asset.imageFilename ?? undefined}
       />
 
-      <div className="absolute top-2 right-2 z-10">
-        <QuickTagToggleButton assetId={asset.id} />
-      </div>
+      {quickTagModeActive && (
+        <div
+          className="absolute top-0 right-0 z-10 size-14"
+          data-catalog-buttons
+          onClick={(event) => event.stopPropagation()}
+        >
+          <div className="absolute top-2 right-2">
+            <QuickTagToggleButton assetId={asset.id} />
+          </div>
+        </div>
+      )}
 
       <div className="absolute bottom-0 left-1 right-1 flex flex-col gap-1 transition-transform duration-300 translate-y-[56px] group-hover:translate-y-[-4px] pb-1">
         <div className="flex flex-col gap-0.5 items-start w-full">
