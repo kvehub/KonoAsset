@@ -8,7 +8,6 @@ mod language;
 mod preference;
 mod state;
 mod suggest;
-mod update;
 
 pub fn generate_tauri_specta_builder() -> Builder<tauri::Wry> {
     Builder::<tauri::Wry>::new().commands(collect_commands![
@@ -42,12 +41,6 @@ pub fn generate_tauri_specta_builder() -> Builder<tauri::Wry> {
         external::booth::get_asset_info_from_booth, // BOOTHからアセット情報を取得する
         external::booth::resolve_pximg_filename,
         external::booth::get_booth_url,
-        // アップデート関連
-        update::common::check_for_update,
-        update::common::download_update,
-        update::common::install_update,
-        update::common::do_not_notify_update,
-        update::changelog::get_changelog,
         // ファイル関連
         file::open::open_file_in_file_manager,
         file::open::open_app_dir,

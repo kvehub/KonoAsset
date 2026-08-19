@@ -217,46 +217,6 @@ async getBoothUrl(id: number) : Promise<Result<string, string>> {
     else return { status: "error", error: e  as any };
 }
 },
-async checkForUpdate() : Promise<Result<boolean, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("check_for_update") };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async downloadUpdate() : Promise<Result<string, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("download_update") };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async installUpdate() : Promise<Result<null, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("install_update") };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async doNotNotifyUpdate() : Promise<Result<boolean, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("do_not_notify_update") };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async getChangelog() : Promise<Result<LocalizedChanges[], string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("get_changelog") };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
 async openFileInFileManager(path: string) : Promise<Result<null, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("open_file_in_file_manager", { path }) };
@@ -502,13 +462,11 @@ addAssetDeepLink: AddAssetDeepLink,
 assetVolumeEstimatedEvent: AssetVolumeEstimatedEvent,
 progressEvent: ProgressEvent,
 taskStatusChanged: TaskStatusChanged,
-updateProgress: UpdateProgress
 }>({
 addAssetDeepLink: "add-asset-deep-link",
 assetVolumeEstimatedEvent: "asset-volume-estimated-event",
 progressEvent: "progress-event",
 taskStatusChanged: "task-status-changed",
-updateProgress: "update-progress"
 })
 
 /** user-defined constants **/
@@ -544,7 +502,6 @@ export type ImageOptimizationResult = { resized: number; deleted: number }
 export type LanguageCode = "ja-JP" | "en-US" | "en-GB" | "zh-CN" | { "user-provided": string }
 export type LoadResult = { success: boolean; preferenceLoaded: boolean; message: string | null }
 export type LocalizationData = { language: LanguageCode; data: Partial<{ [key in string]: string }> }
-export type LocalizedChanges = { version: string; pre_release: boolean; features: string[]; fixes: string[]; others: string[] }
 export type LogEntry = { time: string; level: LogLevel; target: string; message: string }
 export type LogLevel = "Error" | "Warn" | "Info" | "Debug" | "Trace"
 export type OtherAsset = { id: string; description: AssetDescription; category: string }
@@ -563,7 +520,6 @@ export type TaskStatus = "Running" | "Completed" | "Cancelled" | "Failed"
 export type TaskStatusChanged = { id: string; status: TaskStatus }
 export type Theme = "light" | "dark" | "system"
 export type UpdateChannel = "Stable" | "PreRelease"
-export type UpdateProgress = { progress: number }
 export type WorldObject = { id: string; description: AssetDescription; category: string }
 
 /** tauri-specta globals **/

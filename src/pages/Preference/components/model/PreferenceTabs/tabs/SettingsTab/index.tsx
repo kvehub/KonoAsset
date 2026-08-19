@@ -2,7 +2,7 @@ import { PreferenceContext } from '@/components/context/PreferenceContext'
 import { PreferenceTabIDs } from '@/pages/Preference/hook'
 
 import { TabsContent } from '@/components/ui/tabs'
-import { Theme, UpdateChannel } from '@/lib/bindings'
+import { Theme } from '@/lib/bindings'
 import { FC, useContext } from 'react'
 import { DataDirSelector } from './components/DataDirSelector'
 import { ResetButton } from './components/ResetButton'
@@ -11,7 +11,6 @@ import { ThemeSelector } from '@/components/model-legacy/preference/ThemeSelecto
 import { UseUnitypackageSelectorToggle } from '@/components/model-legacy/preference/UseUnitypackageSelectorToggle'
 import { DeleteSourceToggle } from '@/components/model-legacy/preference/DeleteSourceToggle'
 import { LanguageSelector } from '@/components/model-legacy/preference/LanguageSelector'
-import { UpdateChannelSelector } from '@/components/model-legacy/preference/UpdateChannelSelector'
 import { open } from '@tauri-apps/plugin-dialog'
 import { LocalizationContext } from '@/components/context/LocalizationContext'
 import { ZipExtractionToggle } from '@/components/model-legacy/preference/ZipExtractionToggle'
@@ -105,12 +104,6 @@ export const SettingsTab: FC<Props> = ({ id }) => {
             await setPreference({ ...preference, language }, true)
           }}
           loadLanguageFile={selectFileAndLoadLanguageFile}
-        />
-        <UpdateChannelSelector
-          updateChannel={preference.updateChannel}
-          setUpdateChannel={async (channel: UpdateChannel) => {
-            await setPreference({ ...preference, updateChannel: channel }, true)
-          }}
         />
         <ThumbnailOptimizer />
         <ResetButton />

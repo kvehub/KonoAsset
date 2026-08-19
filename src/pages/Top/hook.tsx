@@ -1,6 +1,5 @@
-import { useState, useEffect, useContext } from 'react'
+import { useState, useEffect } from 'react'
 import { onFileDrop } from './logic'
-import { UpdateDialogContext } from '@/components/context/UpdateDialogContext'
 import { useDragDropStore } from '@/stores/DragDropStore'
 import { DragDropHandler } from '@/stores/DragDropStore/index.types'
 
@@ -29,7 +28,6 @@ export const useTopPage = (): ReturnProps => {
   const [isDragAndHover, setDragAndHover] = useState(false)
 
   const { register } = useDragDropStore()
-  const { checkForUpdate } = useContext(UpdateDialogContext)
 
   useEffect(() => {
     const handler: DragDropHandler = {
@@ -43,10 +41,6 @@ export const useTopPage = (): ReturnProps => {
 
     register(handler)
   }, [register])
-
-  useEffect(() => {
-    checkForUpdate()
-  }, [checkForUpdate])
 
   return {
     isDragAndHover,

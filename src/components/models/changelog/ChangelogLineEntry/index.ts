@@ -1,1 +1,0 @@
-export { ChangelogLineEntry } from './ChangelogLineEntry'

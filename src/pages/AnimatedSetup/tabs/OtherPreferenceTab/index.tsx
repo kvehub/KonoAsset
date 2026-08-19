@@ -1,6 +1,5 @@
 import { PreferenceContext } from '@/components/context/PreferenceContext'
 import { DeleteSourceToggle } from '@/components/model-legacy/preference/DeleteSourceToggle'
-import { UpdateChannelSelector } from '@/components/model-legacy/preference/UpdateChannelSelector'
 import { UseTrashBinSelectorToggle } from '@/components/model-legacy/preference/UseTrashBinSelectorToggle'
 import { UseUnitypackageSelectorToggle } from '@/components/model-legacy/preference/UseUnitypackageSelectorToggle'
 import { ZipExtractionToggle } from '@/components/model-legacy/preference/ZipExtractionToggle'
@@ -39,15 +38,6 @@ export const OtherPreferenceTab: FC<Props> = ({ previousTab }) => {
       <div className="grid size-full shrink overflow-hidden">
         <ScrollArea type="always" className="max-h-75">
           <div className="grid gap-8 size-full mx-auto pr-6">
-            <UpdateChannelSelector
-              updateChannel={preference.updateChannel}
-              setUpdateChannel={async (channel) => {
-                await setPreference(
-                  { ...preference, updateChannel: channel },
-                  true,
-                )
-              }}
-            />
             <DeleteSourceToggle
               enable={preference.deleteOnImport}
               setEnable={async (deleteOnImport) => {
