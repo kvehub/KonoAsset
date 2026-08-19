@@ -82,7 +82,7 @@ pub fn run() {
             logging::initialize_logger(app.path().app_log_dir().unwrap());
             builder.mount_events(app);
 
-            set_window_title(app.handle(), format!("KonoAsset v{}", VERSION));
+            set_window_title(app.handle(), format!("KonoAsset kve v{}", VERSION));
 
             app.manage(app.handle().clone());
 

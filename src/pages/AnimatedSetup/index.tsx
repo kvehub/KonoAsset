@@ -20,7 +20,7 @@ export const AnimatedSetupPage: FC = () => {
       <div className="flex items-center gap-4">
         <img
           src="/logo.png"
-          alt="KonoAsset Logo"
+          alt="KonoAsset kve Logo"
           className="size-20 select-none"
           style={{
             animation: 'slide-in-bottom 0.7s cubic-bezier(0.4, 0, 0.2, 1) both',
@@ -33,7 +33,7 @@ export const AnimatedSetupPage: FC = () => {
               'slide-in-right 0.7s cubic-bezier(0.4, 0, 0.2, 1) 0.6s both',
           }}
         >
-          KonoAsset
+          KonoAsset kve
         </h1>
       </div>
       <div

@@ -105,7 +105,7 @@ export const PreferenceSidebar: FC<Props> = ({ activeTab, setActiveTab }) => {
           className="flex justify-center text-muted-foreground select-none cursor-pointer"
           onClick={onVersionClick}
         >
-          KonoAsset v{version}
+          KonoAsset kve v{version}
         </div>
       </SidebarFooter>
     </Sidebar>

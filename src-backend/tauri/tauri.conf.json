@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "KonoAsset",
+  "productName": "konoasset_kve",
   "version": "1.2.6",
   "identifier": "dev.konoasset.app.kvemod",
   "build": {
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "konoasset",
+        "title": "KonoAsset kve",
         "width": 1200,
         "height": 700,
         "minHeight": 400,
