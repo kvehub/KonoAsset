@@ -11,7 +11,12 @@ type Props = {
 type ReturnProps = {
   layoutDivRef: React.RefObject<HTMLDivElement | null>
   sortedAssetSummary: AssetSummary[]
-  displayStyle: 'Grid' | 'List' | 'Catalog' | 'DetailedList'
+  displayStyle:
+    | 'Grid'
+    | 'List'
+    | 'Catalog'
+    | 'DetailedList'
+    | 'DetailedListLarge'
   background: 'NoAssets' | 'NoResults'
 }
 
@@ -69,7 +74,9 @@ export const useAssetView = ({ setShowingAssetCount }: Props): ReturnProps => {
           ? 'Catalog'
           : displayStyle === 'DetailedList'
             ? 'DetailedList'
-            : 'Grid',
+            : displayStyle === 'DetailedListLarge'
+              ? 'DetailedListLarge'
+              : 'Grid',
     background: sortedAssetSummaries.length === 0 ? 'NoAssets' : 'NoResults',
   }
 }

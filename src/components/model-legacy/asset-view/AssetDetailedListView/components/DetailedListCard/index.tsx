@@ -15,9 +15,14 @@ import { QuickTagToggleButton } from '@/components/models/quick-tag/QuickTagTogg
 type Props = {
   asset: AssetSummary
   openEditAssetDialog: (assetId: string) => void
+  large?: boolean
 }
 
-export const DetailedListCard = ({ asset, openEditAssetDialog }: Props) => {
+export const DetailedListCard = ({
+  asset,
+  openEditAssetDialog,
+  large = false,
+}: Props) => {
   const updateFilter = useAssetFilterStore((state) => state.updateFilter)
   const openMemoDialog = useMemoDialogStore((state) => state.open)
 
@@ -64,14 +69,20 @@ export const DetailedListCard = ({ asset, openEditAssetDialog }: Props) => {
     <Card className="w-full flex flex-row p-2 space-x-4 gap-0 hover:bg-accent/15 transition-colors">
       <div
         className={cn(
-          'w-2 self-stretch min-h-[72px] h-auto rounded-full shrink-0 shadow-inner',
+          'w-2 self-stretch h-auto rounded-full shrink-0 shadow-inner',
+          large ? 'min-h-[240px]' : 'min-h-[72px]',
           asset.assetType === 'Avatar' && 'bg-avatar',
           asset.assetType === 'AvatarWearable' && 'bg-avatar-wearable',
           asset.assetType === 'WorldObject' && 'bg-world-object',
           asset.assetType === 'OtherAsset' && 'bg-other-asset',
         )}
       />
-      <div className="w-[72px] h-[72px] shrink-0 rounded overflow-hidden border bg-muted shadow-sm">
+      <div
+        className={cn(
+          'shrink-0 rounded overflow-hidden border bg-muted shadow-sm',
+          large ? 'w-[240px] h-[240px]' : 'w-[72px] h-[72px]',
+        )}
+      >
         <SquareImage
           assetType={asset.assetType}
           filename={asset.imageFilename ?? undefined}

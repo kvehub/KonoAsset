@@ -165,6 +165,7 @@
     "mainnavbar:size-settings:catalog": "Catalog",
     "mainnavbar:size-settings:list": "List",
     "mainnavbar:size-settings:detailed-list": "Detailed List",
+    "mainnavbar:size-settings:detailed-list-large": "Detailed List (Large)",
 
     "mainsidebar:multi-filter-item-selector:placeholder": "Select an item...",
     "mainsidebar:multi-filter-item-selector:no-candidates": "No candidates available",

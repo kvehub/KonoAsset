@@ -5,17 +5,19 @@ import { DetailedListCard } from './components/DetailedListCard'
 type Props = {
   sortedAssetSummary: AssetSummary[]
   openEditAssetDialog: (assetId: string) => void
+  large?: boolean
 }
 
 export const AssetDetailedListView = ({
   sortedAssetSummary,
   openEditAssetDialog,
+  large = false,
 }: Props) => {
   return (
     <div className="h-full">
       <RowVirtualScroll
         items={sortedAssetSummary}
-        estimateSize={88}
+        estimateSize={large ? 196 : 88}
         overscan={10}
         className="h-full"
         innerDivClassName="pb-24"
@@ -24,6 +26,7 @@ export const AssetDetailedListView = ({
             key={asset.id}
             asset={asset}
             openEditAssetDialog={openEditAssetDialog}
+            large={large}
           />
         )}
       />

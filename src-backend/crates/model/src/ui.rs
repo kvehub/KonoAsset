@@ -18,4 +18,5 @@ pub enum DisplayStyle {
     Catalog,
     List,
     DetailedList,
+    DetailedListLarge,
 }

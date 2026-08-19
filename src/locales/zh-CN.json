@@ -165,6 +165,7 @@
     "mainnavbar:size-settings:catalog": "目录",
     "mainnavbar:size-settings:list": "列表",
     "mainnavbar:size-settings:detailed-list": "详细列表",
+    "mainnavbar:size-settings:detailed-list-large": "详细列表（大）",
 
     "mainsidebar:multi-filter-item-selector:placeholder": "选择项目...",
     "mainsidebar:multi-filter-item-selector:no-candidates": "无可用选项",

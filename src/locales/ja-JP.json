@@ -165,6 +165,7 @@
     "mainnavbar:size-settings:catalog": "カタログ",
     "mainnavbar:size-settings:list": "リスト",
     "mainnavbar:size-settings:detailed-list": "詳細リスト",
+    "mainnavbar:size-settings:detailed-list-large": "詳細リスト(大)",
 
     "mainsidebar:multi-filter-item-selector:placeholder": "アイテムを選択...",
     "mainsidebar:multi-filter-item-selector:no-candidates": "候補がありません",

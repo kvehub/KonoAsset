@@ -60,6 +60,13 @@ export const AssetView: FC<Props> = ({
             openEditAssetDialog={openEditAssetDialog}
           />
         )}
+        {displayStyle === 'DetailedListLarge' && (
+          <AssetDetailedListView
+            sortedAssetSummary={sortedAssetSummary}
+            openEditAssetDialog={openEditAssetDialog}
+            large
+          />
+        )}
       </div>
 
       <MemoDialog />

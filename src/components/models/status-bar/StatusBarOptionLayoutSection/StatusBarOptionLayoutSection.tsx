@@ -63,6 +63,13 @@ export const StatusBarOptionLayoutSection: FC<Props> = ({
       >
         {t('mainnavbar:size-settings:detailed-list')}
       </StatusBarOptionSelectButton>
+      <StatusBarOptionSelectButton
+        value="DetailedListLarge"
+        setter={setValue}
+        current={value}
+      >
+        {t('mainnavbar:size-settings:detailed-list-large')}
+      </StatusBarOptionSelectButton>
     </div>
   )
 }
