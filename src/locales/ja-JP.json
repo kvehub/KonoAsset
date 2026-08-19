@@ -162,6 +162,7 @@
     "mainnavbar:size-settings:large": "大",
     "mainnavbar:size-settings:medium": "中",
     "mainnavbar:size-settings:small": "小",
+    "mainnavbar:size-settings:catalog": "カタログ",
     "mainnavbar:size-settings:list": "リスト",
 
     "mainsidebar:multi-filter-item-selector:placeholder": "アイテムを選択...",

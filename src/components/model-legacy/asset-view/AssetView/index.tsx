@@ -3,6 +3,7 @@ import { useAssetView } from './hook'
 import { AssetViewBackground } from '../AssetViewBackground'
 import { AssetGridView } from '../AssetGridView'
 import { AssetListView } from '../AssetListView'
+import { AssetCatalogView } from '../AssetCatalogView'
 import { MemoDialog } from '@/components/models/memo-dialog/MemoDialog'
 import { DependencyDialog } from '@/components/models/dependency-dialog/DependencyDialog'
 import { UnitypackageSelectDialog } from '@/components/models/unitypackage-select-dialog/UnitypackageSelectDialog'
@@ -41,6 +42,13 @@ export const AssetView: FC<Props> = ({
         )}
         {displayStyle === 'List' && (
           <AssetListView
+            sortedAssetSummary={sortedAssetSummary}
+            openEditAssetDialog={openEditAssetDialog}
+          />
+        )}
+        {displayStyle === 'Catalog' && (
+          <AssetCatalogView
+            layoutDivRef={layoutDivRef}
             sortedAssetSummary={sortedAssetSummary}
             openEditAssetDialog={openEditAssetDialog}
           />

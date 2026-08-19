@@ -15,5 +15,6 @@ pub enum DisplayStyle {
     #[default]
     GridMedium,
     GridLarge,
+    Catalog,
     List,
 }

@@ -14,6 +14,8 @@ export const calculateColumnCount = (
     return Math.floor(width / MEDIUM_CARD_WIDTH)
   } else if (size === 'GridLarge') {
     return Math.floor(width / LARGE_CARD_WIDTH)
+  } else if (size === 'Catalog') {
+    return Math.floor(width / MEDIUM_CARD_WIDTH)
   }
 
   // default

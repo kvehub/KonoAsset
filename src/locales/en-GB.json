@@ -162,6 +162,7 @@
     "mainnavbar:size-settings:large": "Large",
     "mainnavbar:size-settings:medium": "Medium",
     "mainnavbar:size-settings:small": "Small",
+    "mainnavbar:size-settings:catalog": "Catalog",
     "mainnavbar:size-settings:list": "List",
 
     "mainsidebar:multi-filter-item-selector:placeholder": "Select an item...",
