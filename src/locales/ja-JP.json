@@ -377,6 +377,13 @@
     "setup:button:done": "利用をはじめる！",
 
     "ui:multi-select:create-new": "新しく作成",
-    "ui:multi-select:not-selected-tooltip": "これが指定されているアセットは表示されません"
+    "ui:multi-select:not-selected-tooltip": "これが指定されているアセットは表示されません",
+
+    "quicktag:button:tooltip": "タグ付けモード",
+    "quicktag:popover:placeholder": "タグを選択または入力...",
+    "quicktag:popover:create": "新規タグ:",
+    "quicktag:popover:empty": "タグがありません",
+    "quicktag:chip:exit": "タグ付けモードを終了",
+    "quicktag:toast:failed": "タグの更新に失敗しました"
   }
 }
