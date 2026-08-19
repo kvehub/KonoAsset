@@ -164,6 +164,7 @@
     "mainnavbar:size-settings:small": "小",
     "mainnavbar:size-settings:catalog": "カタログ",
     "mainnavbar:size-settings:list": "リスト",
+    "mainnavbar:size-settings:detailed-list": "詳細リスト",
 
     "mainsidebar:multi-filter-item-selector:placeholder": "アイテムを選択...",
     "mainsidebar:multi-filter-item-selector:no-candidates": "候補がありません",

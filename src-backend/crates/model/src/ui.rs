@@ -17,4 +17,5 @@ pub enum DisplayStyle {
     GridLarge,
     Catalog,
     List,
+    DetailedList,
 }

@@ -10,11 +10,14 @@ const EXAMPLE_DEPENDENCIES: AssetSummary = {
   assetType: 'Avatar',
   name: 'Example Asset 1',
   creator: 'Example Creator',
+  category: null,
   imageFilename: null,
   hasMemo: false,
   boothItemId: 6641548,
   dependencies: [],
   publishedAt: 0,
+  tags: [],
+  supportedAvatars: [],
 }
 
 const meta = {

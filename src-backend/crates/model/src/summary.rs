@@ -16,6 +16,8 @@ pub struct AssetSummary {
     pub dependencies: Vec<Uuid>,
     pub booth_item_id: Option<u64>,
     pub published_at: Option<i64>,
+    pub tags: Vec<String>,
+    pub supported_avatars: Vec<String>,
 }
 
 impl From<Avatar> for AssetSummary {
@@ -31,6 +33,8 @@ impl From<Avatar> for AssetSummary {
             dependencies: asset.description.dependencies,
             booth_item_id: asset.description.booth_item_id,
             published_at: asset.description.published_at,
+            tags: asset.description.tags,
+            supported_avatars: vec![],
         }
     }
 }
@@ -48,6 +52,8 @@ impl From<AvatarWearable> for AssetSummary {
             dependencies: asset.description.dependencies,
             booth_item_id: asset.description.booth_item_id,
             published_at: asset.description.published_at,
+            tags: asset.description.tags,
+            supported_avatars: asset.supported_avatars.into_iter().collect(),
         }
     }
 }
@@ -65,6 +71,8 @@ impl From<WorldObject> for AssetSummary {
             dependencies: asset.description.dependencies,
             booth_item_id: asset.description.booth_item_id,
             published_at: asset.description.published_at,
+            tags: asset.description.tags,
+            supported_avatars: vec![],
         }
     }
 }
@@ -82,6 +90,8 @@ impl From<OtherAsset> for AssetSummary {
             dependencies: asset.description.dependencies,
             booth_item_id: asset.description.booth_item_id,
             published_at: asset.description.published_at,
+            tags: asset.description.tags,
+            supported_avatars: vec![],
         }
     }
 }

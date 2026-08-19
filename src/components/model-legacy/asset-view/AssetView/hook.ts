@@ -1,5 +1,5 @@
 import { AssetSummary } from '@/lib/bindings'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { useAssetSummaryViewStore } from '@/stores/AssetSummaryViewStore'
 import { useShallow } from 'zustand/react/shallow'
 import { useAssetFilterStore } from '@/stores/AssetFilterStore'
@@ -11,7 +11,7 @@ type Props = {
 type ReturnProps = {
   layoutDivRef: React.RefObject<HTMLDivElement | null>
   sortedAssetSummary: AssetSummary[]
-  displayStyle: 'Grid' | 'List' | 'Catalog'
+  displayStyle: 'Grid' | 'List' | 'Catalog' | 'DetailedList'
   background: 'NoAssets' | 'NoResults'
 }
 
@@ -54,11 +54,10 @@ export const useAssetView = ({ setShowingAssetCount }: Props): ReturnProps => {
     return reverseOrder ? filterApplied.reverse() : filterApplied
   }, [filteredIds, reverseOrder, sortedAssetSummaries])
 
-  const [prevShowingAssetCount, setPrevShowingAssetCount] = useState(-1)
-  if (prevShowingAssetCount !== filterAppliedSortedAssetSummaries.length) {
-    setShowingAssetCount(filterAppliedSortedAssetSummaries.length)
-    setPrevShowingAssetCount(filterAppliedSortedAssetSummaries.length)
-  }
+  const showingAssetCount = filterAppliedSortedAssetSummaries.length
+  useEffect(() => {
+    setShowingAssetCount(showingAssetCount)
+  }, [setShowingAssetCount, showingAssetCount])
 
   return {
     layoutDivRef,
@@ -68,7 +67,9 @@ export const useAssetView = ({ setShowingAssetCount }: Props): ReturnProps => {
         ? 'List'
         : displayStyle === 'Catalog'
           ? 'Catalog'
-          : 'Grid',
+          : displayStyle === 'DetailedList'
+            ? 'DetailedList'
+            : 'Grid',
     background: sortedAssetSummaries.length === 0 ? 'NoAssets' : 'NoResults',
   }
 }

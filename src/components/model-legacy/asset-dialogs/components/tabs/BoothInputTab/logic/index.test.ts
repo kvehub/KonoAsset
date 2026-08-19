@@ -7,12 +7,15 @@ const mockAssetSummary: AssetSummary = {
   id: '123',
   name: 'name',
   creator: 'creator',
+  category: null,
   assetType: 'Avatar',
   hasMemo: false,
   dependencies: [],
   boothItemId: 123,
   imageFilename: 'imageFilename',
   publishedAt: 123,
+  tags: [],
+  supportedAvatars: [],
 }
 
 const mockBoothAssetInfo: BoothAssetInfo = {
