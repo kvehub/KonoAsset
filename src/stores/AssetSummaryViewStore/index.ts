@@ -15,6 +15,7 @@ type Props = {
   displayStyle: DisplayStyle
 
   refreshAssetSummaries: () => Promise<void>
+  updateAssetSummaryTags: (id: string, tag: string, on: boolean) => void
   deleteAssetSummaryFromFrontend: (id: string) => void
   setSort: (sortBy: SortBy, reverseOrder: boolean) => Promise<void>
   setDisplayStyle: (displayStyle: DisplayStyle) => void
@@ -33,6 +34,22 @@ export const useAssetSummaryViewStore = create<Props>((set, get) => ({
       sortedAssetSummaries: await refreshAssetSummaries(sortBy),
     }
     set(newValue)
+  },
+  updateAssetSummaryTags: (id, tag, on) => {
+    set((prev) => ({
+      sortedAssetSummaries: prev.sortedAssetSummaries.map((assetSummary) => {
+        if (assetSummary.id !== id) {
+          return assetSummary
+        }
+
+        const tags = assetSummary.tags.filter((currentTag) => currentTag !== tag)
+
+        return {
+          ...assetSummary,
+          tags: on ? [...tags, tag] : tags,
+        }
+      }),
+    }))
   },
   deleteAssetSummaryFromFrontend: (id: string) => {
     set((prev) => {

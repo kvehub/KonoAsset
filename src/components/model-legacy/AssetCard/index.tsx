@@ -11,6 +11,7 @@ import { AssetCardTypeBadge } from '@/components/models/asset-card/AssetCardType
 import { useMemoDialogStore } from '@/stores/dialogs/MemoDialogStore'
 import { AssetCardMeatballMenu } from '@/components/models/asset-card/AssetCardMeatballMenu'
 import { SquareImage } from '@/components/models/square-image/SquareImage'
+import { QuickTagToggleButton } from '@/components/models/quick-tag/QuickTagToggleButton/QuickTagToggleButton'
 
 type Props = {
   asset: AssetSummary
@@ -46,15 +47,18 @@ export const AssetCard = ({ asset, ref, openEditAssetDialog }: Props) => {
               type={asset.assetType}
               onClick={() => updateFilter({ assetType: asset.assetType })}
             />
-            {asset.hasMemo && (
-              <Button
-                variant="outline"
-                className="size-8"
-                onClick={() => openMemoDialog(asset.id)}
-              >
-                <NotebookText />
-              </Button>
-            )}
+            <div className="flex flex-row items-center gap-2">
+              <QuickTagToggleButton assetId={asset.id} />
+              {asset.hasMemo && (
+                <Button
+                  variant="outline"
+                  className="size-8"
+                  onClick={() => openMemoDialog(asset.id)}
+                >
+                  <NotebookText />
+                </Button>
+              )}
+            </div>
           </div>
           <CardTitle
             className={cn(

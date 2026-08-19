@@ -377,6 +377,13 @@
     "setup:button:done": "Get Started!",
 
     "ui:multi-select:create-new": "Create new",
-    "ui:multi-select:not-selected-tooltip": "Assets with this attribute will not be displayed"
+    "ui:multi-select:not-selected-tooltip": "Assets with this attribute will not be displayed",
+
+    "quicktag:button:tooltip": "Quick tagging mode",
+    "quicktag:popover:placeholder": "Select or type a tag...",
+    "quicktag:popover:create": "New tag:",
+    "quicktag:popover:empty": "No tags found",
+    "quicktag:chip:exit": "Exit tagging mode",
+    "quicktag:toast:failed": "Failed to update tag"
   }
 }

@@ -10,6 +10,7 @@ import { Card } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import { useAssetFilterStore } from '@/stores/AssetFilterStore'
 import { useMemoDialogStore } from '@/stores/dialogs/MemoDialogStore'
+import { QuickTagToggleButton } from '@/components/models/quick-tag/QuickTagToggleButton/QuickTagToggleButton'
 
 type Props = {
   asset: AssetSummary
@@ -135,6 +136,7 @@ export const DetailedListCard = ({ asset, openEditAssetDialog }: Props) => {
             <NotebookText className="size-5" />
           </Button>
         )}
+        <QuickTagToggleButton assetId={asset.id} />
         <AssetCardOpenButton
           id={asset.id}
           hasDependencies={asset.dependencies.length > 0}
