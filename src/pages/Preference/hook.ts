@@ -2,6 +2,7 @@ import { useState } from 'react'
 
 export type PreferenceTabIDs =
   | 'settings'
+  | 'tag-editor'
   | 'adapter'
   | 'statistics'
   | 'logs'

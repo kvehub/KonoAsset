@@ -15,6 +15,7 @@ import {
   Info,
   Logs,
   Settings,
+  Tags,
 } from 'lucide-react'
 import { PreferenceTabIDs } from '../../../hook'
 import { FC } from 'react'
@@ -56,6 +57,16 @@ export const PreferenceSidebar: FC<Props> = ({ activeTab, setActiveTab }) => {
             >
               <Settings />
               {t('preference:settings')}
+            </PreferenceSidebarButton>
+          </SidebarGroupContent>
+          <SidebarGroupContent className="p-2">
+            <PreferenceSidebarButton
+              id="tag-editor"
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+            >
+              <Tags />
+              {t('preference:tag-editor')}
             </PreferenceSidebarButton>
           </SidebarGroupContent>
           <SidebarGroupContent className="p-2">

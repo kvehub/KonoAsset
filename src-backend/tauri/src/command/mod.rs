@@ -33,6 +33,7 @@ pub fn generate_tauri_specta_builder() -> Builder<tauri::Wry> {
         // サジェストの取得関連
         suggest::get::get_creator_names,
         suggest::get::get_all_asset_tags,
+        suggest::rename::rename_asset_tag,
         suggest::get::get_avatar_wearable_categories,
         suggest::get::get_avatar_wearable_supported_avatars,
         suggest::get::get_world_object_categories,

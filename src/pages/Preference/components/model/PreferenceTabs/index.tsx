@@ -6,6 +6,7 @@ import { AboutTab } from './tabs/AboutTab'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { AdapterTab } from './tabs/AdapterTab'
 import { StatisticsTab } from './tabs/StatisticsTab'
+import { TagEditor } from './tabs/TagEditor'
 
 type Props = {
   activeTab: string
@@ -16,6 +17,7 @@ export const PreferenceTabs: FC<Props> = ({ activeTab }) => {
     <Tabs defaultValue="settings" value={activeTab} className="w-full">
       <ScrollArea>
         <SettingsTab id="settings" />
+        <TagEditor id="tag-editor" />
         <AdapterTab id="adapter" />
         <StatisticsTab id="statistics" />
         <LogsTab id="logs" />

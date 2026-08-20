@@ -210,6 +210,43 @@ impl<T: AssetTrait + HashSetVersionedLoader<T> + Clone + Serialize + Deserialize
         self.save().await
     }
 
+    pub async fn rename_tag_and_save(&self, source: &str, target: &str) -> Result<bool, String> {
+        let mut changed = false;
+
+        {
+            let mut assets = self.assets.lock().await;
+            let cloned_assets = assets.clone();
+
+            for asset in cloned_assets {
+                if !asset.get_description().tags.iter().any(|tag| tag == source) {
+                    continue;
+                }
+
+                let mut new_asset = asset.clone();
+                let mut tags = Vec::with_capacity(asset.get_description().tags.len());
+                let mut seen = HashSet::new();
+
+                for tag in &asset.get_description().tags {
+                    let renamed = if tag == source { target } else { tag.as_str() };
+                    if seen.insert(renamed.to_string()) {
+                        tags.push(renamed.to_string());
+                    }
+                }
+
+                new_asset.get_description_as_mut().tags = tags;
+                assets.remove(&asset);
+                assets.insert(new_asset);
+                changed = true;
+            }
+        }
+
+        if changed {
+            self.save().await?;
+        }
+
+        Ok(changed)
+    }
+
     pub async fn merge_from(
         &self,
         other: &JsonAssetContainer<T>,
