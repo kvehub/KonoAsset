@@ -1,4 +1,8 @@
-import { convertToBoothURL, extractBoothItemId } from '@/lib/utils'
+import {
+  convertToBoothURL,
+  extractBoothItemId,
+  isNumericBoothItemId,
+} from '@/lib/utils'
 import { useState, useContext, ChangeEvent } from 'react'
 import { AddAssetDialogContext } from '../../../../../AddAssetDialog'
 import { sep } from '@tauri-apps/api/path'
@@ -20,6 +24,7 @@ type ReturnProps = {
   onUrlInputChange: (e: ChangeEvent<HTMLInputElement>) => void
   fetching: boolean
   boothUrlInput: string
+  boothItemId: number | null
   moveToNextTab: () => void
   backToPreviousTab: () => void
 }
@@ -94,7 +99,11 @@ export const useBoothInputTabForAddDialog = ({
     const url = e.target.value
     setBoothUrlInput(url)
 
-    const extractIdResult = extractBoothItemId(url)
+    const urlToParse = isNumericBoothItemId(url)
+      ? convertToBoothURL(parseInt(url.trim(), 10))
+      : url
+
+    const extractIdResult = extractBoothItemId(urlToParse)
 
     if (extractIdResult.status === 'ok') {
       setBoothItemId(extractIdResult.data)
@@ -117,6 +126,7 @@ export const useBoothInputTabForAddDialog = ({
     onUrlInputChange,
     fetching,
     boothUrlInput,
+    boothItemId,
     moveToNextTab,
     backToPreviousTab,
   }

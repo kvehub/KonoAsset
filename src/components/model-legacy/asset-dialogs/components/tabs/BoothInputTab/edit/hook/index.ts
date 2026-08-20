@@ -1,4 +1,8 @@
-import { convertToBoothURL, extractBoothItemId } from '@/lib/utils'
+import {
+  convertToBoothURL,
+  extractBoothItemId,
+  isNumericBoothItemId,
+} from '@/lib/utils'
 import { useState, ChangeEvent } from 'react'
 import { AssetFormType } from '@/lib/form'
 import { useToast } from '@/hooks/use-toast'
@@ -16,6 +20,7 @@ type ReturnProps = {
   onUrlInputChange: (e: ChangeEvent<HTMLInputElement>) => void
   fetching: boolean
   boothUrlInput: string
+  boothItemId: number | null
 }
 
 export const useBoothInputTabForEditDialog = ({
@@ -65,7 +70,11 @@ export const useBoothInputTabForEditDialog = ({
     const url = e.target.value
     setBoothUrlInput(url)
 
-    const extractIdResult = extractBoothItemId(url)
+    const urlToParse = isNumericBoothItemId(url)
+      ? convertToBoothURL(parseInt(url.trim(), 10))
+      : url
+
+    const extractIdResult = extractBoothItemId(urlToParse)
 
     if (extractIdResult.status === 'ok') {
       setBoothItemId(extractIdResult.data)
@@ -79,5 +88,6 @@ export const useBoothInputTabForEditDialog = ({
     onUrlInputChange,
     fetching,
     boothUrlInput,
+    boothItemId,
   }
 }

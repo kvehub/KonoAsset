@@ -10,11 +10,16 @@ const shopBoothUrlCaptureRegex =
   /^https:\/\/[0-9a-z-]+\.booth\.pm\/items\/([0-9]+)(?:\?.*)?$/
 const defaultBoothUrlCaptureRegex =
   /^https:\/\/booth\.pm\/[a-z-]{2,5}\/items\/([0-9]+)(?:\?.*)?$/
+const numericBoothItemIdRegex = /^[0-9]+$/
 
 export function isBoothURL(url: string) {
   return (
     defaultBoothUrlCaptureRegex.test(url) || shopBoothUrlCaptureRegex.test(url)
   )
+}
+
+export function isNumericBoothItemId(value: string) {
+  return numericBoothItemIdRegex.test(value.trim())
 }
 
 export const extractBoothItemId = (url: string): Result<number, string> => {

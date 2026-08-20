@@ -144,6 +144,42 @@ describe('BoothInputTab Hook', () => {
     expect(mockToast).toHaveBeenCalledOnce()
   })
 
+  it('sets boothItemId when only a numeric value is entered', () => {
+    const mockForm = {
+      getValues: vi.fn().mockReturnValue(null),
+    }
+    const mockSetTab = vi.fn()
+
+    const { result } = renderHook(() =>
+      useBoothInputTabForAddDialog({
+        // @ts-expect-error mockForm is not a valid AssetFormType but satisfies the required fields
+        form: mockForm,
+        setTab: mockSetTab,
+      }),
+    )
+
+    // Initial state should have no boothItemId
+    expect(result.current.boothItemId).toBe(null)
+
+    // Numeric only input should be kept as-is in the input field...
+    act(() => {
+      result.current.onUrlInputChange({
+        target: { value: '6641548' },
+      } as React.ChangeEvent<HTMLInputElement>)
+    })
+    expect(result.current.boothUrlInput).toBe('6641548')
+    // ...but internally resolved to a valid boothItemId
+    expect(result.current.boothItemId).toBe(6641548)
+
+    // Non-numeric, non-URL input should not resolve to a boothItemId
+    act(() => {
+      result.current.onUrlInputChange({
+        target: { value: 'not a valid input' },
+      } as React.ChangeEvent<HTMLInputElement>)
+    })
+    expect(result.current.boothItemId).toBe(null)
+  })
+
   it('executes backToPreviousTab function correctly', async () => {
     const mockForm = {
       getValues: vi.fn().mockReturnValue(null),

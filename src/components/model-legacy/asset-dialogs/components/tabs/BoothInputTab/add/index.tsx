@@ -10,7 +10,6 @@ import { Label } from '@/components/ui/label'
 import { ChevronRight, Loader2 } from 'lucide-react'
 import { AssetFormType } from '@/lib/form'
 import { useBoothInputTabForAddDialog } from './hook'
-import { isBoothURL } from '@/lib/utils'
 import { useLocalization } from '@/hooks/use-localization'
 
 type Props = {
@@ -37,6 +36,7 @@ export const BoothInputTabForAddDialog = ({
     onUrlInputChange,
     fetching,
     boothUrlInput,
+    boothItemId,
     moveToNextTab,
     backToPreviousTab,
   } = useBoothInputTabForAddDialog({
@@ -83,7 +83,7 @@ export const BoothInputTabForAddDialog = ({
               disabled={fetching}
             />
             <Button
-              disabled={fetching || !isBoothURL(boothUrlInput)}
+              disabled={fetching || boothItemId === null}
               onClick={() => getAssetDescriptionFromBooth()}
               className="h-10 gap-1"
             >

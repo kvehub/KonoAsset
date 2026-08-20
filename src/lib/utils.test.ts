@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { convertToBoothURL, extractBoothItemId, isBoothURL } from './utils'
+import {
+  convertToBoothURL,
+  extractBoothItemId,
+  isBoothURL,
+  isNumericBoothItemId,
+} from './utils'
 
 describe.concurrent('utils', () => {
   it('executes isBoothURL correctly', () => {
@@ -66,6 +71,22 @@ describe.concurrent('utils', () => {
       status: 'error',
       error: 'Invalid Booth URL specified',
     })
+  })
+
+  it('executes isNumericBoothItemId correctly', () => {
+    // 正常
+    expect(isNumericBoothItemId('123')).toBe(true)
+    expect(isNumericBoothItemId('6641548')).toBe(true)
+    expect(isNumericBoothItemId('  123  ')).toBe(true)
+
+    // 異常
+    expect(isNumericBoothItemId('')).toBe(false)
+    expect(isNumericBoothItemId('  ')).toBe(false)
+    expect(isNumericBoothItemId('123abc')).toBe(false)
+    expect(isNumericBoothItemId('abc123')).toBe(false)
+    expect(isNumericBoothItemId('12.3')).toBe(false)
+    expect(isNumericBoothItemId('-123')).toBe(false)
+    expect(isNumericBoothItemId('https://booth.pm/ja/items/123')).toBe(false)
   })
 
   it('executes convertToBoothURL correctly', () => {
