@@ -1,7 +1,10 @@
 use chrono::DateTime;
 use model::AssetType;
 
-use crate::{BoothInfoFetchError, definitions::BoothJsonSchema};
+use crate::{
+    definitions::{BoothCategory, BoothJsonSchema},
+    BoothInfoFetchError,
+};
 
 use super::{cache::BoothCache, client::get_reqwest_client, definitions::BoothAssetInfo};
 
@@ -47,11 +50,13 @@ impl BoothFetcher {
         let published_at = DateTime::parse_from_rfc3339(&response.published_at)?.timestamp_millis();
 
         let estimated_asset_type = estimate_asset_type_from_category(response.category.id);
+        let category = category_name_for_asset(response.category);
 
         let result = BoothAssetInfo {
             id,
             name: response.name,
             creator: response.shop.name,
+            category,
             image_urls,
             published_at,
             estimated_asset_type,
@@ -59,6 +64,14 @@ impl BoothFetcher {
 
         self.cache.insert(id, result.clone());
         Ok(result)
+    }
+}
+
+fn category_name_for_asset(category: BoothCategory) -> Option<String> {
+    if category.id == 208 {
+        None
+    } else {
+        Some(category.name)
     }
 }
 
@@ -100,6 +113,7 @@ mod tests {
         assert_eq!(result.id, 6641548);
         assert_eq!(result.name, "KonoAsset - VRChat向けアセット管理ツール");
         assert_eq!(result.creator, "silolab");
+        assert_eq!(result.category, Some("3Dツール・システム".to_string()));
         assert_eq!(
             result.image_urls,
             vec![
@@ -141,6 +155,24 @@ mod tests {
 
         // 不明なカテゴリ
         assert_eq!(estimate_asset_type_from_category(0), None);
+    }
+
+    #[test]
+    fn test_category_name_for_asset() {
+        assert_eq!(
+            category_name_for_asset(BoothCategory {
+                id: 208,
+                name: "3Dキャラクター".to_string(),
+            }),
+            None
+        );
+        assert_eq!(
+            category_name_for_asset(BoothCategory {
+                id: 215,
+                name: "3Dツール・システム".to_string(),
+            }),
+            Some("3Dツール・システム".to_string())
+        );
     }
 
     #[test]

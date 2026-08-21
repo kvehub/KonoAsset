@@ -117,6 +117,7 @@ export const useBoothInputTabForAddDialog = ({
           boothItemId,
           form,
           setImageUrls,
+          applyCategory: true,
         })
 
         if (result.status === 'ok') {
@@ -132,6 +133,7 @@ export const useBoothInputTabForAddDialog = ({
           form.setValue('imageFilename', null)
           form.setValue('boothItemId', null)
           form.setValue('publishedAt', null)
+          form.setValue('category', '')
           setImageUrls([])
         }
       } else {
@@ -141,6 +143,7 @@ export const useBoothInputTabForAddDialog = ({
         form.setValue('imageFilename', null)
         form.setValue('boothItemId', null)
         form.setValue('publishedAt', null)
+        form.setValue('category', '')
         setImageUrls([])
       }
 

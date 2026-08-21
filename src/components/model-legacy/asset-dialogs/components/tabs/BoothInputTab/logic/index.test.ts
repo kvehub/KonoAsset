@@ -22,6 +22,7 @@ const mockBoothAssetInfo: BoothAssetInfo = {
   id: 123,
   name: 'name',
   creator: 'creator',
+  category: 'category',
   estimatedAssetType: 'Avatar',
   imageUrls: [
     'https://null-route.konoasset.dev/image1.jpg',
@@ -120,6 +121,21 @@ describe('BoothInputTab Logic', () => {
     })
 
     expect(result.status).toBe('error')
+  })
+
+  it('applies the Booth category only when requested', async () => {
+    const mockSetImageUrls = vi.fn()
+    mockForm.setValue.mockClear()
+
+    await getAndSetAssetInfoFromBoothToForm({
+      boothItemId: 123,
+      setImageUrls: mockSetImageUrls,
+      applyCategory: true,
+      // @ts-expect-error mockForm is not a valid AssetFormType but satisfies the required fields
+      form: mockForm,
+    })
+
+    expect(mockForm.setValue).toHaveBeenCalledWith('category', 'category')
   })
 
   it('executes getAndSetAssetDescriptionFromBoothToForm function correctly on failed to fetch information from Booth', async () => {

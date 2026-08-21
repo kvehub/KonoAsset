@@ -5,6 +5,7 @@ type Props = {
   boothItemId: number
   form: AssetFormType
   setImageUrls: (imageUrls: string[]) => void
+  applyCategory?: boolean
 }
 
 type ReturnProps =
@@ -22,6 +23,7 @@ export const getAndSetAssetInfoFromBoothToForm = async ({
   boothItemId,
   form,
   setImageUrls,
+  applyCategory = false,
 }: Props): Promise<Result<ReturnProps, string>> => {
   const result = await commands.getAssetInfoFromBooth(boothItemId)
 
@@ -36,6 +38,9 @@ export const getAndSetAssetInfoFromBoothToForm = async ({
   form.setValue('publishedAt', data.publishedAt)
   form.setValue('boothItemId', boothItemId)
   form.setValue('assetType', data.estimatedAssetType ?? 'Avatar')
+  if (applyCategory) {
+    form.setValue('category', data.category ?? '')
+  }
 
   setImageUrls(data.imageUrls)
   if (data.imageUrls.length > 0) {

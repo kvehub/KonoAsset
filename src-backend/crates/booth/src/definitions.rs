@@ -7,6 +7,7 @@ pub struct BoothAssetInfo {
     pub id: u64,
     pub name: String,
     pub creator: String,
+    pub category: Option<String>,
     pub image_urls: Vec<String>,
     pub published_at: i64,
     pub estimated_asset_type: Option<AssetType>,
@@ -35,4 +36,5 @@ pub(crate) struct BoothPximg {
 #[derive(Deserialize)]
 pub(crate) struct BoothCategory {
     pub id: i32,
+    pub name: String,
 }

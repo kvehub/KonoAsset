@@ -42,6 +42,7 @@ mod tests {
             id: 12345,
             name: "Test Asset".to_string(),
             creator: "Test Creator".to_string(),
+            category: None,
             estimated_asset_type: Some(AssetType::Avatar),
             image_urls: vec![],
             published_at: 12345,
