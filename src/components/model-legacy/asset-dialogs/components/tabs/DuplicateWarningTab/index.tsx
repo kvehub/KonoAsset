@@ -7,10 +7,18 @@ import {
 } from '@/components/ui/dialog'
 import { useCallback, useContext } from 'react'
 import { AddAssetDialogContext } from '../../../AddAssetDialog'
-import { Download, OctagonAlert } from 'lucide-react'
+import { Download, Folder, OctagonAlert } from 'lucide-react'
 import { SlimAssetDetail } from '@/components/model-legacy/SlimAssetDetail'
 import { useLocalization } from '@/hooks/use-localization'
 import { useDataManagementDialogStore } from '@/stores/dialogs/DataManagementDialogStore'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { commands } from '@/lib/bindings'
+import { useToast } from '@/hooks/use-toast'
 type Props = {
   setTab: (tab: string) => void
 
@@ -27,6 +35,7 @@ export const DuplicateWarningTab = ({
   closeDialog,
 }: Props) => {
   const { t } = useLocalization()
+  const { toast } = useToast()
   const { assetPaths, duplicateWarningItems } = useContext(
     AddAssetDialogContext,
   )
@@ -46,6 +55,19 @@ export const DuplicateWarningTab = ({
       await importItems(assetPaths)
     },
     [assetPaths, openDataManagementDialog, importItems, closeDialog],
+  )
+
+  const openFolder = useCallback(
+    async (assetId: string) => {
+      const result = await commands.openManagedDir(assetId)
+      if (result.status === 'error') {
+        toast({
+          title: t('general:error'),
+          description: result.error,
+        })
+      }
+    },
+    [t, toast],
   )
 
   const moveToPreviousTab = () => setTab('booth-input')
@@ -70,16 +92,34 @@ export const DuplicateWarningTab = ({
         </div>
       </div>
       <div>
-        {duplicateWarningItems.map((item) => (
-          <div key={item.id} className="mb-4">
-            <SlimAssetDetail asset={item} className="max-w-[600px]">
-              <Button onClick={() => importEntriesAs(item.id)}>
-                <Download />
-                {t('addasset:duplicate-warning:import-here')}
-              </Button>
-            </SlimAssetDetail>
-          </div>
-        ))}
+        <TooltipProvider>
+          {duplicateWarningItems.map((item) => (
+            <div key={item.id} className="mb-4">
+              <SlimAssetDetail asset={item} className="max-w-[600px]">
+                <div className="flex flex-row gap-2">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => openFolder(item.id)}
+                      >
+                        <Folder className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {t('assetcard:open-button:open-dir')}
+                    </TooltipContent>
+                  </Tooltip>
+                  <Button onClick={() => importEntriesAs(item.id)}>
+                    <Download />
+                    {t('addasset:duplicate-warning:import-here')}
+                  </Button>
+                </div>
+              </SlimAssetDetail>
+            </div>
+          ))}
+        </TooltipProvider>
       </div>
       <DialogFooter className="mt-8">
         <Button
