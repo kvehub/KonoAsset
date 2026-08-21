@@ -247,6 +247,37 @@ impl<T: AssetTrait + HashSetVersionedLoader<T> + Clone + Serialize + Deserialize
         Ok(changed)
     }
 
+    pub async fn rename_category_and_save(
+        &self,
+        source: &str,
+        target: &str,
+    ) -> Result<bool, String> {
+        let mut changed = false;
+        {
+            let mut assets = self.assets.lock().await;
+            let cloned_assets = assets.clone();
+
+            for asset in cloned_assets {
+                if asset.get_category().map(|category| category.as_str()) != Some(source) {
+                    continue;
+                }
+
+                let mut new_asset = asset.clone();
+                if let Some(category) = new_asset.get_category_as_mut() {
+                    *category = target.to_string();
+                }
+                assets.remove(&asset);
+                assets.insert(new_asset);
+                changed = true;
+            }
+        }
+
+        if changed {
+            self.save().await?;
+        }
+        Ok(changed)
+    }
+
     pub async fn merge_from(
         &self,
         other: &JsonAssetContainer<T>,

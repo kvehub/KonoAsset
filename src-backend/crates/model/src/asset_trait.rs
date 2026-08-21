@@ -10,6 +10,8 @@ pub trait AssetTrait {
     fn set_id(&mut self, id: Uuid);
     fn get_description(&self) -> &AssetDescription;
     fn get_description_as_mut(&mut self) -> &mut AssetDescription;
+    fn get_category(&self) -> Option<&String>;
+    fn get_category_as_mut(&mut self) -> Option<&mut String>;
 }
 
 impl AssetTrait for Avatar {
@@ -35,6 +37,13 @@ impl AssetTrait for Avatar {
 
     fn get_description_as_mut(&mut self) -> &mut AssetDescription {
         &mut self.description
+    }
+
+    fn get_category(&self) -> Option<&String> {
+        None
+    }
+    fn get_category_as_mut(&mut self) -> Option<&mut String> {
+        None
     }
 }
 
@@ -62,6 +71,13 @@ impl AssetTrait for AvatarWearable {
     fn get_description_as_mut(&mut self) -> &mut AssetDescription {
         &mut self.description
     }
+
+    fn get_category(&self) -> Option<&String> {
+        Some(&self.category)
+    }
+    fn get_category_as_mut(&mut self) -> Option<&mut String> {
+        Some(&mut self.category)
+    }
 }
 
 impl AssetTrait for WorldObject {
@@ -88,6 +104,13 @@ impl AssetTrait for WorldObject {
     fn get_description_as_mut(&mut self) -> &mut AssetDescription {
         &mut self.description
     }
+
+    fn get_category(&self) -> Option<&String> {
+        Some(&self.category)
+    }
+    fn get_category_as_mut(&mut self) -> Option<&mut String> {
+        Some(&mut self.category)
+    }
 }
 
 impl AssetTrait for OtherAsset {
@@ -113,5 +136,12 @@ impl AssetTrait for OtherAsset {
 
     fn get_description_as_mut(&mut self) -> &mut AssetDescription {
         &mut self.description
+    }
+
+    fn get_category(&self) -> Option<&String> {
+        Some(&self.category)
+    }
+    fn get_category_as_mut(&mut self) -> Option<&mut String> {
+        Some(&mut self.category)
     }
 }

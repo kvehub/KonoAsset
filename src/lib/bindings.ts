@@ -169,6 +169,14 @@ async renameAssetTag(source: string, target: string, merge: boolean) : Promise<R
     else return { status: "error", error: e  as any };
 }
 },
+async renameAssetCategory(source: string, target: string, merge: boolean) : Promise<Result<RenameCategoryResult, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("rename_asset_category", { source, target, merge }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async getAvatarWearableCategories(allowedIds: string[] | null) : Promise<Result<PrioritizedEntry[], string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("get_avatar_wearable_categories", { allowedIds }) };
@@ -520,6 +528,7 @@ export type PreWorldObject = { description: AssetDescription; category: string }
 export type PreferenceStore = { dataDirPath: string; theme: Theme; language: LanguageCode; deleteOnImport: boolean; zipExtraction: boolean; useUnitypackageSelectedOpen: boolean; useTrashBin: boolean; updateChannel: UpdateChannel }
 export type PrioritizedEntry = { priority: number; value: string }
 export type ProgressEvent = { percentage: number; filename: string }
+export type RenameCategoryResult = "renamed" | "conflict"
 export type RenameTagResult = "renamed" | "conflict"
 export type ResetApplicationRequest = { resetPreferences: boolean; deleteMetadata: boolean; deleteAssetData: boolean }
 export type SimplifiedDirEntry = { entryType: EntryType; name: string; absolutePath: string }

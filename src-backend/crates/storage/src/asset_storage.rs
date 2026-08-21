@@ -257,6 +257,19 @@ impl AssetStorage {
         Ok(())
     }
 
+    pub async fn rename_category_and_save(&self, source: &str, target: &str) -> Result<(), String> {
+        self.avatar_wearable_store
+            .rename_category_and_save(source, target)
+            .await?;
+        self.world_object_store
+            .rename_category_and_save(source, target)
+            .await?;
+        self.other_asset_store
+            .rename_category_and_save(source, target)
+            .await?;
+        Ok(())
+    }
+
     pub async fn migrate_data_dir<P>(
         &mut self,
         new_path: P,
