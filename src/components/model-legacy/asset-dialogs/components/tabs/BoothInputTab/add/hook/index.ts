@@ -15,6 +15,9 @@ type Props = {
   form: AssetFormType
   setTab: (tab: string) => void
   setImageUrls: (imageUrls: string[]) => void
+  validatePaths: () => Promise<boolean>
+  submit: (ignoreNonExistingPaths: boolean) => Promise<void>
+  submitting: boolean
 }
 
 type ReturnProps = {
@@ -27,12 +30,17 @@ type ReturnProps = {
   boothItemId: number | null
   moveToNextTab: () => void
   backToPreviousTab: () => void
+  quickRegister: () => Promise<void>
+  quickRegistering: boolean
 }
 
 export const useBoothInputTabForAddDialog = ({
   form,
   setTab,
   setImageUrls,
+  validatePaths,
+  submit,
+  submitting,
 }: Props): ReturnProps => {
   const formBoothItemId = form.getValues('boothItemId')
   const formBoothUrl =
@@ -41,6 +49,7 @@ export const useBoothInputTabForAddDialog = ({
   const [boothItemId, setBoothItemId] = useState(formBoothItemId)
   const [boothUrlInput, setBoothUrlInput] = useState(formBoothUrl)
   const [fetching, setFetching] = useState(false)
+  const [quickRegistering, setQuickRegistering] = useState(false)
 
   const { t } = useLocalization()
   const { toast } = useToast()
@@ -95,6 +104,55 @@ export const useBoothInputTabForAddDialog = ({
     }
   }
 
+  const quickRegister = async () => {
+    if (fetching || submitting || quickRegistering) {
+      return
+    }
+
+    setQuickRegistering(true)
+
+    try {
+      if (boothItemId !== null) {
+        const result = await getAndSetAssetInfoFromBoothToForm({
+          boothItemId,
+          form,
+          setImageUrls,
+        })
+
+        if (result.status === 'ok') {
+          if (result.data.duplicated) {
+            setDuplicateWarningItems(result.data.duplicatedItems)
+            setTab('duplicate-warning')
+            return
+          }
+        } else {
+          form.setValue('assetType', 'OtherAsset')
+          form.setValue('name', representativeImportFilename)
+          form.setValue('creator', '')
+          form.setValue('imageFilename', null)
+          form.setValue('boothItemId', null)
+          form.setValue('publishedAt', null)
+          setImageUrls([])
+        }
+      } else {
+        form.setValue('assetType', 'OtherAsset')
+        form.setValue('name', representativeImportFilename)
+        form.setValue('creator', '')
+        form.setValue('imageFilename', null)
+        form.setValue('boothItemId', null)
+        form.setValue('publishedAt', null)
+        setImageUrls([])
+      }
+
+      const isAbleToSubmit = await validatePaths()
+      if (isAbleToSubmit) {
+        await submit(false)
+      }
+    } finally {
+      setQuickRegistering(false)
+    }
+  }
+
   const onUrlInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const url = e.target.value
     setBoothUrlInput(url)
@@ -129,5 +187,7 @@ export const useBoothInputTabForAddDialog = ({
     boothItemId,
     moveToNextTab,
     backToPreviousTab,
+    quickRegister,
+    quickRegistering,
   }
 }

@@ -82,6 +82,7 @@
     "addasset:booth-input:get-info": "从BOOTH获取信息",
     "addasset:booth-input:button-text": "获取",
     "addasset:booth-input:manual-input": "跳过自动获取",
+    "addasset:booth-input:quick-register": "快速注册",
     "addasset:booth-input:failed-to-get-info": "获取信息失败",
     "addasset:booth-input:no-file-selected": "未选择文件！",
     "addasset:booth-edit": "编辑BOOTH信息",

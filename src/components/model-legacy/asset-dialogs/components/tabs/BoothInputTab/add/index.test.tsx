@@ -24,6 +24,9 @@ describe('BoothInputTab', () => {
   const onUrlInputChange = vi.fn()
   const moveToNextTab = vi.fn()
   const backToPreviousTab = vi.fn()
+  const validatePaths = vi.fn().mockResolvedValue(true)
+  const submit = vi.fn().mockResolvedValue(undefined)
+  const quickRegister = vi.fn().mockResolvedValue(undefined)
 
   const base = {
     representativeImportFilename: 'test',
@@ -35,6 +38,11 @@ describe('BoothInputTab', () => {
     boothItemId: null,
     moveToNextTab,
     backToPreviousTab,
+    validatePaths,
+    submit,
+    submitting: false,
+    quickRegister,
+    quickRegistering: false,
   }
 
   afterEach(() => {
@@ -73,6 +81,9 @@ describe('BoothInputTab', () => {
     // Check skip button works correctly
     fireEvent.click(screen.getByText('addasset:booth-input:manual-input'))
     expect(moveToNextTab).toHaveBeenCalledOnce()
+
+    fireEvent.click(screen.getByText('addasset:booth-input:quick-register'))
+    expect(quickRegister).toHaveBeenCalledOnce()
 
     const inputTarget = screen.getByPlaceholderText(
       'https://booth.pm/ja/items/6641548',

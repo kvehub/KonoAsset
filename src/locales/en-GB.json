@@ -82,6 +82,7 @@
     "addasset:booth-input:get-info": "Fetch info from BOOTH",
     "addasset:booth-input:button-text": "Fetch",
     "addasset:booth-input:manual-input": "Skip auto-fetch",
+    "addasset:booth-input:quick-register": "Quick register",
     "addasset:booth-input:failed-to-get-info": "Failed to fetch information",
     "addasset:booth-input:no-file-selected": "No file selected!",
     "addasset:booth-edit": "Edit BOOTH information",

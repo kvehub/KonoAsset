@@ -7,7 +7,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { ChevronRight, Loader2 } from 'lucide-react'
+import { ChevronRight, Loader2, Zap } from 'lucide-react'
 import { AssetFormType } from '@/lib/form'
 import { useBoothInputTabForAddDialog } from './hook'
 import { useLocalization } from '@/hooks/use-localization'
@@ -16,6 +16,9 @@ type Props = {
   form: AssetFormType
   setTab: (tab: string) => void
   setImageUrls: (imageUrls: string[]) => void
+  validatePaths: () => Promise<boolean>
+  submit: (ignoreNonExistingPaths: boolean) => Promise<void>
+  submitting: boolean
 
   tabIndex: number
   totalTabs: number
@@ -25,6 +28,9 @@ export const BoothInputTabForAddDialog = ({
   form,
   setTab,
   setImageUrls,
+  validatePaths,
+  submit,
+  submitting,
   tabIndex,
   totalTabs,
 }: Props) => {
@@ -39,10 +45,15 @@ export const BoothInputTabForAddDialog = ({
     boothItemId,
     moveToNextTab,
     backToPreviousTab,
+    quickRegister,
+    quickRegistering,
   } = useBoothInputTabForAddDialog({
     form,
     setTab,
     setImageUrls,
+    validatePaths,
+    submit,
+    submitting,
   })
 
   return (
@@ -99,8 +110,18 @@ export const BoothInputTabForAddDialog = ({
             className="block w-48 h-12"
             variant={'outline'}
             onClick={moveToNextTab}
+            disabled={fetching || quickRegistering || submitting}
           >
             {t('addasset:booth-input:manual-input')}
+          </Button>
+          <Button
+            className="w-48 h-12 ml-2"
+            onClick={quickRegister}
+            disabled={fetching || quickRegistering || submitting}
+          >
+            {quickRegistering && <Loader2 size={16} className="animate-spin" />}
+            {!quickRegistering && <Zap size={16} />}
+            {t('addasset:booth-input:quick-register')}
           </Button>
         </div>
       </div>

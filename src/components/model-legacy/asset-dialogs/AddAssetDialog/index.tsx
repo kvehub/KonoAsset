@@ -71,6 +71,9 @@ export const AddAssetDialog = ({ dialogOpen, setDialogOpen }: Props) => {
             form={form}
             setTab={setTab}
             setImageUrls={setImageUrls}
+            validatePaths={validatePaths}
+            submit={submit}
+            submitting={submitting}
             tabIndex={2}
             totalTabs={5}
           />

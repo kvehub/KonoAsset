@@ -82,6 +82,7 @@
     "addasset:booth-input:get-info": "BOOTHから情報を取得する",
     "addasset:booth-input:button-text": "取得",
     "addasset:booth-input:manual-input": "自動取得をスキップ",
+    "addasset:booth-input:quick-register": "クイック登録",
     "addasset:booth-input:failed-to-get-info": "情報取得に失敗しました",
     "addasset:booth-input:no-file-selected": "ファイルが選択されていません！",
     "addasset:booth-edit": "BOOTH情報の編集",
