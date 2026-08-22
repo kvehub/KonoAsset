@@ -292,24 +292,39 @@ where
     let (tx, mut rx) = tokio::sync::mpsc::channel::<String>(32);
 
     let cloned_amount_of_processed_entries = amount_of_processed_entries.clone();
-    tokio::select! {
-        result = async {
-            copy_dir_internal(src.clone(), dest.clone(), amount_of_processed_entries, &tx)
-            .await
-            .map_err(|e| {
-                tokio::io::Error::new(
-                    tokio::io::ErrorKind::InvalidInput,
-                    format!("Failed to copy directory: {:?}", e),
-                )
-            })
-        } => result,
-        _ = async {
+
+    // 以前は tokio::select! で「コピー処理」と「進捗通知の受信処理」を競わせていたが、
+    // select! は先に完了した方を採用し、もう一方を即座にキャンセルしてしまう。
+    // ファイル数が少ない/コピーが高速な場合、実コピー処理があっという間に完了し、
+    // 進捗通知の受信ループがまだ何も消費していないうちにキャンセルされてしまい、
+    // progress_callback がほとんど(あるいは全く)呼ばれない不具合があった。
+    // tokio::join! を使い、両方の処理が完了するまで並行して待つように変更する。
+    let (copy_result, ()) = tokio::join!(
+        async {
+            let result = copy_dir_internal(src.clone(), dest.clone(), amount_of_processed_entries, &tx)
+                .await
+                .map_err(|e| {
+                    tokio::io::Error::new(
+                        tokio::io::ErrorKind::InvalidInput,
+                        format!("Failed to copy directory: {:?}", e),
+                    )
+                });
+
+            // 送信側を明示的に閉じることで、下の受信ループが全ての進捗通知を
+            // 受け取り終えた時点で正しく終了できるようにする
+            drop(tx);
+
+            result
+        },
+        async {
             while let Some(path) = rx.recv().await {
                 let processed = *cloned_amount_of_processed_entries.lock().await;
                 progress_callback(processed as f32 / amount_of_entries as f32, path);
             }
-        } => Ok(()),
-    }?;
+        }
+    );
+
+    copy_result?;
 
     if delete_source {
         let guard = DeletionGuard::new(&src);
@@ -592,5 +607,55 @@ mod tests {
         let result = copy_file(&src, &dest, false, guard).await;
 
         assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_copy_dir_reports_progress_for_every_entry() {
+        let dir = get_test_dir().join("copy_dir_progress");
+
+        if dir.exists() {
+            std::fs::remove_dir_all(&dir).unwrap();
+        }
+
+        let src = dir.join("src");
+        let dest = dir.join("dest");
+        std::fs::create_dir_all(&src).unwrap();
+
+        // ファイル数が少なくコピーが高速に終わる状況を再現し、
+        // 進捗通知が(select!による打ち切りで)欠落しないことを検証する
+        const FILE_COUNT: usize = 20;
+        for i in 0..FILE_COUNT {
+            std::fs::write(src.join(format!("file_{i}.txt")), b"x").unwrap();
+        }
+
+        let call_count = Arc::new(Mutex::new(0u64));
+        let cloned_call_count = call_count.clone();
+
+        let result = copy_dir(
+            src,
+            dest,
+            false,
+            FileTransferGuard::none(),
+            move |_progress, _filename| {
+                // Fn なので async block は使えないため std::sync 相当の即時更新に留める
+                let cloned_call_count = cloned_call_count.clone();
+                tokio::spawn(async move {
+                    *cloned_call_count.lock().await += 1;
+                });
+            },
+        )
+        .await;
+
+        assert!(result.is_ok());
+
+        // spawnしたタスクがスケジュールされるまで少し待つ
+        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+
+        let final_count = *call_count.lock().await;
+
+        assert_eq!(
+            final_count, FILE_COUNT as u64,
+            "progress_callback should be invoked once per copied entry"
+        );
     }
 }

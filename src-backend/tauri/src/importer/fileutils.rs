@@ -136,6 +136,12 @@ where
                 None
             };
 
+            // copy_file自体は進捗を通知しないため(ZIP展開やディレクトリコピーと違い、
+            // 単一ファイルの丸ごとコピーで途中経過を刻めないため)、コピー前後で
+            // 0%→100%の進捗を通知する。これが無いとダイアログ/トーストの
+            // プログレスバーが全く更新されないまま完了してしまう。
+            progress_callback(0f32, file_name.to_string());
+
             modify_guard::copy_file(
                 &src.to_path_buf(),
                 &destination,
@@ -143,6 +149,8 @@ where
                 FileTransferGuard::none(),
             )
             .await?;
+
+            progress_callback(1f32, file_name.to_string());
 
             if let Some(mut delete_on_drop) = delete_on_drop {
                 delete_on_drop.mark_as_completed();
@@ -297,5 +305,38 @@ mod tests {
         assert!(extracted_zip_dir.exists());
         assert!(normal_file_txt.exists());
         assert_eq!(std::fs::read_to_string(&normal_file_txt).unwrap(), "dummy");
+    }
+
+    #[tokio::test]
+    async fn test_import_single_file_reports_progress() {
+        use std::sync::{Arc, Mutex};
+
+        let base = PathBuf::from("test/temp/import_asset_single_file_progress");
+
+        if std::fs::exists(&base).unwrap() {
+            std::fs::remove_dir_all(&base).unwrap();
+        }
+
+        let src = base.join("src/normal-file.txt");
+        let dest = base.join("dest");
+
+        std::fs::create_dir_all(src.parent().unwrap()).unwrap();
+        std::fs::create_dir_all(&dest).unwrap();
+        std::fs::write(&src, b"dummy").unwrap();
+
+        let reported_progress: Arc<Mutex<Vec<f32>>> = Arc::new(Mutex::new(Vec::new()));
+        let cloned_reported_progress = reported_progress.clone();
+
+        // zip_extraction=falseの場合(展開を行わない場合)でも、単純ファイルコピーで
+        // 進捗が正しく通知されることを検証する
+        import_asset(&src, &dest, true, false, move |progress, _filename| {
+            cloned_reported_progress.lock().unwrap().push(progress);
+        })
+        .await
+        .unwrap();
+
+        let reported_progress = reported_progress.lock().unwrap();
+
+        assert_eq!(*reported_progress, vec![0f32, 1f32]);
     }
 }
