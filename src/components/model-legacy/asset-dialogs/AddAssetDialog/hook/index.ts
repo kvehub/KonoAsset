@@ -238,8 +238,7 @@ export const useAddAssetDialog = ({
       duration: 3000,
     })
 
-    setTab('empty')
-    setDialogOpen(false)
+    setImportTaskId(null)
     refreshAssetSummaries()
     refreshFilteredIds()
   }
@@ -250,8 +249,7 @@ export const useAddAssetDialog = ({
       duration: 2000,
     })
 
-    setTab('empty')
-    setDialogOpen(false)
+    setImportTaskId(null)
   }
 
   const onTaskFailed = (error: string | null) => {
@@ -261,8 +259,7 @@ export const useAddAssetDialog = ({
       duration: 3000,
     })
 
-    setTab('empty')
-    setDialogOpen(false)
+    setImportTaskId(null)
   }
 
   const validatePaths = async (): Promise<boolean> => {
@@ -346,7 +343,7 @@ export const useAddAssetDialog = ({
 
       if (result.status === 'ok') {
         setImportTaskId(result.data)
-        setTab('progress')
+        setDialogOpen(false)
         return
       }
 

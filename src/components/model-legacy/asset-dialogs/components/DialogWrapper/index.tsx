@@ -1,7 +1,6 @@
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog'
 import { Tabs } from '@/components/ui/tabs'
-import { cn } from '@/lib/utils'
 import { Plus } from 'lucide-react'
 import { FC } from 'react'
 
@@ -37,10 +36,7 @@ export const DialogWrapper: FC<Props> = ({
         </DialogTrigger>
       )}
       <DialogContent
-        className={cn(
-          'max-w-[650px]',
-          tab === 'progress' && '[&>button]:hidden',
-        )}
+        className="max-w-[650px]"
         onInteractOutside={(event) => {
           if (preventCloseOnOutsideClick) {
             event.preventDefault()
