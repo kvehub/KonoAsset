@@ -476,11 +476,13 @@ async saveAppState(state: AppState) : Promise<Result<null, string>> {
 export const events = __makeEvents__<{
 addAssetDeepLink: AddAssetDeepLink,
 assetVolumeEstimatedEvent: AssetVolumeEstimatedEvent,
+duplicateFileSkippedEvent: DuplicateFileSkippedEvent,
 progressEvent: ProgressEvent,
 taskStatusChanged: TaskStatusChanged
 }>({
 addAssetDeepLink: "add-asset-deep-link",
 assetVolumeEstimatedEvent: "asset-volume-estimated-event",
+duplicateFileSkippedEvent: "duplicate-file-skipped-event",
 progressEvent: "progress-event",
 taskStatusChanged: "task-status-changed"
 })
@@ -508,6 +510,17 @@ export type BoothAssetInfo = { id: number; name: string; creator: string; catego
 export type CustomLanguageFileLoadResult = { data: LocalizationData; missing_keys: string[]; additional_keys: string[] }
 export type DisplayStyle = "GridSmall" | "GridMedium" | "GridLarge" | "Catalog" | "List" | "DetailedList" | "DetailedListLarge"
 export type DryOrActual = "dryRun" | "actualRun"
+/**
+ * インポート時、内容が同一のファイルが既に存在するためコピー/展開をスキップした際に発火する
+ */
+export type DuplicateFileSkippedEvent = { filename: string; 
+/**
+ * このスキップが発生したタスクのID。呼び出し元がタスクIDを把握していない場合(新規アセット
+ * 作成時など)は None になる。データ管理ダイアログでの追加インポートでは常に Some になり、
+ * フロント側で「どの行のインポートがスキップされたか」を厳密に(ファイル名の偶然の一致に
+ * 頼らず)特定するために使う。
+ */
+taskId: string | null }
 export type EntryType = "directory" | "file"
 export type FileInfo = { fileName: string; absolutePath: string }
 export type FilterElement<T> = { type: "AND"; data: T[] } | { type: "OR"; data: T[] } | { type: "Unlabeled" }

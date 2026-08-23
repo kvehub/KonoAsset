@@ -16,3 +16,4 @@ async_zip.workspace = true
 async-read-progress = "0.2.0"
 sanitize-filename.workspace = true
 encoding_rs = "0.8.35"
+file.workspace = true

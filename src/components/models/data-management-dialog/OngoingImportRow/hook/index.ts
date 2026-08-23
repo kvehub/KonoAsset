@@ -12,11 +12,13 @@ type Props = {
 
 type ReturnProps = {
   status: TaskStatus
+  isDuplicate: boolean
   onCancelButtonClick: () => Promise<void>
 }
 
 export const useOngoingImportRow = ({ taskId }: Props): ReturnProps => {
   const [status, setStatus] = useState<TaskStatus>('Running')
+  const [isDuplicate, setIsDuplicate] = useState(false)
   const { t } = useLocalization()
   const { toast } = useToast()
 
@@ -38,6 +40,34 @@ export const useOngoingImportRow = ({ taskId }: Props): ReturnProps => {
       description: error,
     })
   }, [onTaskCompleted, t, taskId, toast])
+
+  // このタスクの中でスキップされた重複ファイルがあったかどうかを、イベントの
+  // taskId で厳密に突き合わせて判定する(ファイル名の偶然の一致には頼らない)。
+  useEffect(() => {
+    let isCancelled = false
+    let unlistenFn: UnlistenFn | undefined = undefined
+
+    const setupListener = async () => {
+      unlistenFn = await events.duplicateFileSkippedEvent.listen((e) => {
+        if (isCancelled) return
+
+        if (e.payload.taskId === taskId) {
+          setIsDuplicate(true)
+        }
+      })
+
+      if (isCancelled) {
+        unlistenFn()
+      }
+    }
+
+    setupListener()
+
+    return () => {
+      isCancelled = true
+      unlistenFn?.()
+    }
+  }, [taskId])
 
   useEffect(() => {
     let isCancelled = false
@@ -133,6 +163,7 @@ export const useOngoingImportRow = ({ taskId }: Props): ReturnProps => {
 
   return {
     status,
+    isDuplicate,
     onCancelButtonClick: cancelTask,
   }
 }

@@ -261,6 +261,51 @@ where
     P: AsRef<Path> + Clone + Send + Sync + 'static,
     Q: AsRef<Path> + Clone + Send + Sync + 'static,
 {
+    copy_dir_impl(src, dest, delete_source, guard, progress_callback, None)
+        .await
+        .map(|_skipped| ())
+}
+
+/// `copy_dir` と同様にディレクトリを再帰的にコピーするが、`existing_hashes` に既に
+/// 含まれるハッシュ値を持つファイル(=重複ファイル)についてはコピーをスキップする。
+/// スキップされなかった新規ファイルのハッシュは `existing_hashes` に追加されるため、
+/// 同一バッチ内の重複(コピー対象同士が同じ内容)も検出できる。
+///
+/// 戻り値はスキップされた(コピー元からの相対)パスの一覧。
+pub async fn copy_dir_with_dedup<P, Q>(
+    src: P,
+    dest: Q,
+    guard: FileTransferGuard,
+    existing_hashes: Arc<Mutex<std::collections::HashSet<u64>>>,
+    progress_callback: impl Fn(f32, String),
+) -> Result<Vec<String>, tokio::io::Error>
+where
+    P: AsRef<Path> + Clone + Send + Sync + 'static,
+    Q: AsRef<Path> + Clone + Send + Sync + 'static,
+{
+    copy_dir_impl(
+        src,
+        dest,
+        false,
+        guard,
+        progress_callback,
+        Some(existing_hashes),
+    )
+    .await
+}
+
+async fn copy_dir_impl<P, Q>(
+    src: P,
+    dest: Q,
+    delete_source: bool,
+    guard: FileTransferGuard,
+    progress_callback: impl Fn(f32, String),
+    dedup: Option<Arc<Mutex<std::collections::HashSet<u64>>>>,
+) -> Result<Vec<String>, tokio::io::Error>
+where
+    P: AsRef<Path> + Clone + Send + Sync + 'static,
+    Q: AsRef<Path> + Clone + Send + Sync + 'static,
+{
     if !src.as_ref().exists() {
         return Err(tokio::io::Error::new(
             tokio::io::ErrorKind::NotFound,
@@ -289,9 +334,11 @@ where
     let amount_of_entries = count_entries(&src)?;
 
     let amount_of_processed_entries = Arc::new(Mutex::new(0));
+    let skipped_paths = Arc::new(Mutex::new(Vec::<String>::new()));
     let (tx, mut rx) = tokio::sync::mpsc::channel::<String>(32);
 
     let cloned_amount_of_processed_entries = amount_of_processed_entries.clone();
+    let cloned_skipped_paths = skipped_paths.clone();
 
     // 以前は tokio::select! で「コピー処理」と「進捗通知の受信処理」を競わせていたが、
     // select! は先に完了した方を採用し、もう一方を即座にキャンセルしてしまう。
@@ -301,14 +348,22 @@ where
     // tokio::join! を使い、両方の処理が完了するまで並行して待つように変更する。
     let (copy_result, ()) = tokio::join!(
         async {
-            let result = copy_dir_internal(src.clone(), dest.clone(), amount_of_processed_entries, &tx)
-                .await
-                .map_err(|e| {
-                    tokio::io::Error::new(
-                        tokio::io::ErrorKind::InvalidInput,
-                        format!("Failed to copy directory: {:?}", e),
-                    )
-                });
+            let result = copy_dir_internal(
+                src.clone(),
+                dest.clone(),
+                src.clone(),
+                amount_of_processed_entries,
+                &tx,
+                dedup,
+                cloned_skipped_paths,
+            )
+            .await
+            .map_err(|e| {
+                tokio::io::Error::new(
+                    tokio::io::ErrorKind::InvalidInput,
+                    format!("Failed to copy directory: {:?}", e),
+                )
+            });
 
             // 送信側を明示的に閉じることで、下の受信ループが全ての進捗通知を
             // 受け取り終えた時点で正しく終了できるようにする
@@ -331,7 +386,9 @@ where
         delete_recursive_completely(&src, &guard).await?;
     }
 
-    Ok(())
+    let skipped = skipped_paths.lock().await.clone();
+
+    Ok(skipped)
 }
 
 fn count_entries<P>(path: P) -> Result<u64, std::io::Error>
@@ -354,15 +411,19 @@ where
     Ok(amount_of_entries)
 }
 
-async fn copy_dir_internal<P, Q>(
+async fn copy_dir_internal<P, Q, R>(
     old_path: P,
     new_path: Q,
+    copy_root: R,
     processed_files: Arc<Mutex<u64>>,
     tx: &tokio::sync::mpsc::Sender<String>,
+    dedup: Option<Arc<Mutex<std::collections::HashSet<u64>>>>,
+    skipped_paths: Arc<Mutex<Vec<String>>>,
 ) -> Result<(), tokio::io::Error>
 where
     P: AsRef<Path> + Send + Sync + 'static,
     Q: AsRef<Path> + Send + Sync + 'static,
+    R: AsRef<Path> + Clone + Send + Sync + 'static,
 {
     let mut entries = tokio::fs::read_dir(&old_path).await?;
 
@@ -397,8 +458,11 @@ where
             Box::pin(copy_dir_internal(
                 path.clone().to_owned(),
                 new_path.clone().to_owned(),
+                copy_root.clone(),
                 processed_files.clone(),
                 tx,
+                dedup.clone(),
+                skipped_paths.clone(),
             ))
             .await?;
 
@@ -410,6 +474,44 @@ where
                 )
             })?;
         } else {
+            if let Some(dedup) = &dedup {
+                let path_for_hash = path.clone();
+                let hash = tokio::task::spawn_blocking(move || {
+                    crate::hash::hash_file_sync(&path_for_hash)
+                })
+                .await
+                .map_err(|e| {
+                    tokio::io::Error::new(
+                        tokio::io::ErrorKind::Other,
+                        format!("Failed to join blocking task: {:?}", e),
+                    )
+                })??;
+
+                let mut hash_set = dedup.lock().await;
+
+                if hash_set.contains(&hash) {
+                    let relative = path
+                        .strip_prefix(copy_root.as_ref())
+                        .unwrap_or(&path)
+                        .display()
+                        .to_string();
+
+                    skipped_paths.lock().await.push(relative);
+
+                    *processed_files.lock().await += 1;
+                    tx.send(path.display().to_string()).await.map_err(|e| {
+                        tokio::io::Error::new(
+                            tokio::io::ErrorKind::InvalidInput,
+                            format!("Failed to send path: {:?}", e),
+                        )
+                    })?;
+
+                    continue;
+                }
+
+                hash_set.insert(hash);
+            }
+
             let result = tokio::fs::copy(&path, &new_path).await;
 
             if let Err(e) = result {

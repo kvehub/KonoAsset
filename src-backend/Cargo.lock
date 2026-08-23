@@ -1366,6 +1366,7 @@ dependencies = [
  "tokio",
  "trash",
  "uuid",
+ "xxhash-rust",
 ]
 
 [[package]]
@@ -3694,7 +3695,7 @@ dependencies = [
  "once_cell",
  "socket2",
  "tracing",
- "windows-sys 0.52.0",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -6877,6 +6878,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "xxhash-rust"
+version = "0.8.18"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "aee1b19627c7c60102ab80d3a9cbe18de90bfe03bfa6c3715447681f0e8c8af6"
+
+[[package]]
 name = "y4m"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7053,6 +7060,7 @@ dependencies = [
  "async-read-progress",
  "async_zip",
  "encoding_rs",
+ "file",
  "log",
  "sanitize-filename",
  "tokio",

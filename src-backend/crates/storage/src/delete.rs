@@ -46,6 +46,12 @@ pub async fn delete_asset(
     // すべてのアセットの依存アセットからアイテムを削除
     storage.remove_all_dependencies(id).await?;
 
+    // 重複ファイル判定用ハッシュキャッシュのエントリも削除する
+    storage
+        .get_asset_data_hash_store()
+        .delete_asset_and_save(id)
+        .await?;
+
     return Ok(());
 }
 
@@ -330,5 +336,66 @@ mod tests {
         let result = delete_asset_from_store(&app_dir, store, non_existent_id, false).await;
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), false);
+    }
+
+    #[tokio::test]
+    async fn test_delete_asset_removes_hash_cache_entry() {
+        let app_dir = setup_test_dir("test/temp/delete_asset_removes_hash_cache_entry").await;
+
+        let mut storage = AssetStorage::create(&app_dir).unwrap();
+        storage.load_all_assets_from_files().await.unwrap();
+
+        let asset_id = Uuid::new_v4();
+        create_test_asset_dir(&app_dir, &asset_id);
+
+        let avatar = Avatar {
+            id: asset_id,
+            description: AssetDescription {
+                name: "Test Avatar".into(),
+                creator: "Test Creator".into(),
+                image_filename: None,
+                tags: vec![],
+                memo: None,
+                booth_item_id: None,
+                dependencies: vec![],
+                created_at: 1234567890000,
+                published_at: None,
+            },
+        };
+
+        storage
+            .get_avatar_store()
+            .add_asset_and_save(avatar)
+            .await
+            .unwrap();
+
+        // インポート相当の操作としてハッシュキャッシュにエントリを作っておく
+        let asset_data_dir = app_dir.join("data").join(asset_id.to_string());
+        storage
+            .get_asset_data_hash_store()
+            .build_hash_index_and_save(asset_id, asset_data_dir)
+            .await
+            .unwrap();
+
+        let cache_path = app_dir.join("metadata").join("assetDataHashes.json");
+        let cache_content: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(&cache_path).unwrap()).unwrap();
+        assert!(
+            cache_content["assets"]
+                .as_object()
+                .unwrap()
+                .contains_key(&asset_id.to_string())
+        );
+
+        delete_asset(&storage, asset_id, false).await.unwrap();
+
+        let cache_content: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(&cache_path).unwrap()).unwrap();
+        assert!(
+            !cache_content["assets"]
+                .as_object()
+                .unwrap()
+                .contains_key(&asset_id.to_string())
+        );
     }
 }

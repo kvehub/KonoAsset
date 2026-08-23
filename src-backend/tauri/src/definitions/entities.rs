@@ -2,6 +2,7 @@ use std::path::PathBuf;
 
 use serde::Serialize;
 use tauri_specta::Event;
+use uuid::Uuid;
 
 #[derive(Serialize, Clone, specta::Type)]
 #[serde(rename_all = "camelCase")]
@@ -42,6 +43,24 @@ impl ProgressEvent {
             percentage,
             filename,
         }
+    }
+}
+
+/// インポート時、内容が同一のファイルが既に存在するためコピー/展開をスキップした際に発火する
+#[derive(Serialize, Clone, specta::Type, Event)]
+#[serde(rename_all = "camelCase")]
+pub struct DuplicateFileSkippedEvent {
+    pub filename: String,
+    /// このスキップが発生したタスクのID。呼び出し元がタスクIDを把握していない場合(新規アセット
+    /// 作成時など)は None になる。データ管理ダイアログでの追加インポートでは常に Some になり、
+    /// フロント側で「どの行のインポートがスキップされたか」を厳密に(ファイル名の偶然の一致に
+    /// 頼らず)特定するために使う。
+    pub task_id: Option<Uuid>,
+}
+
+impl DuplicateFileSkippedEvent {
+    pub fn new(filename: String, task_id: Option<Uuid>) -> Self {
+        Self { filename, task_id }
     }
 }
 

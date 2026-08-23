@@ -4,6 +4,7 @@ use std::{
     fs,
     hash::Hash,
     path::{Path, PathBuf},
+    sync::Arc,
 };
 
 use file::{
@@ -19,6 +20,7 @@ use crate::{
     definitions::AssetUpdatePayload, delete::delete_asset_image, utils::execute_image_fixation,
 };
 
+use super::asset_data_hash_store::AssetDataHashStore;
 use super::json_asset_container::JsonAssetContainer;
 
 pub struct AssetStorage {
@@ -28,6 +30,7 @@ pub struct AssetStorage {
     avatar_wearable_store: JsonAssetContainer<AvatarWearable>,
     world_object_store: JsonAssetContainer<WorldObject>,
     other_asset_store: JsonAssetContainer<OtherAsset>,
+    asset_data_hash_store: Arc<AssetDataHashStore>,
 }
 
 impl AssetStorage {
@@ -41,6 +44,7 @@ impl AssetStorage {
             JsonAssetContainer::create(&data_dir)?;
         let other_asset_store: JsonAssetContainer<OtherAsset> =
             JsonAssetContainer::create(&data_dir)?;
+        let asset_data_hash_store = Arc::new(AssetDataHashStore::create(&data_dir)?);
 
         Ok(Self {
             data_dir,
@@ -49,6 +53,7 @@ impl AssetStorage {
             avatar_wearable_store: avatar_wearable_store,
             world_object_store: world_object_store,
             other_asset_store: other_asset_store,
+            asset_data_hash_store,
         })
     }
 
@@ -73,6 +78,11 @@ impl AssetStorage {
             Err(e) => return Err(e),
         }
 
+        match self.asset_data_hash_store.load().await {
+            Ok(_) => {}
+            Err(e) => return Err(e),
+        }
+
         Ok(())
     }
 
@@ -90,6 +100,10 @@ impl AssetStorage {
 
     pub fn get_other_asset_store(&self) -> &JsonAssetContainer<OtherAsset> {
         &self.other_asset_store
+    }
+
+    pub fn get_asset_data_hash_store(&self) -> Arc<AssetDataHashStore> {
+        self.asset_data_hash_store.clone()
     }
 
     pub fn data_dir(&self) -> PathBuf {
@@ -463,6 +477,7 @@ impl AssetStorage {
         self.avatar_wearable_store = JsonAssetContainer::create(&new_path)?;
         self.world_object_store = JsonAssetContainer::create(&new_path)?;
         self.other_asset_store = JsonAssetContainer::create(&new_path)?;
+        self.asset_data_hash_store = Arc::new(AssetDataHashStore::create(&new_path)?);
 
         self.data_dir = new_path;
 

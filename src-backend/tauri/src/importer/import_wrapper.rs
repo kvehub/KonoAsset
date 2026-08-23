@@ -10,14 +10,14 @@ use file::{
     modify_guard::{self, DeletionGuard},
 };
 use model::{AssetTrait, Avatar, AvatarWearable, OtherAsset, WorldObject};
-use storage::asset_storage::AssetStorage;
+use storage::{asset_data_hash_store::AssetDataHashStore, asset_storage::AssetStorage};
 use tauri::AppHandle;
 use tauri_specta::Event;
 use tokio::sync::Mutex;
 use uuid::Uuid;
 
 use crate::definitions::{
-    entities::ProgressEvent,
+    entities::{DuplicateFileSkippedEvent, ProgressEvent},
     import_request::{AssetImportRequest, PreAsset, PreAvatar},
 };
 
@@ -49,6 +49,7 @@ where
 
     let asset = request.pre_asset.create();
     let file_count = request.absolute_paths.len();
+    let hash_store = basic_store.get_asset_data_hash_store();
 
     for i in 0..file_count {
         let path_str = request.absolute_paths.get(i).unwrap();
@@ -72,13 +73,26 @@ where
         let result = import_files(
             &src_import_asset_path,
             &destination,
+            asset.get_id(),
+            hash_store.clone(),
             progress_callback,
             zip_extraction,
         )
         .await;
 
-        if let Err(err) = result {
-            return Err(format!("Failed to import asset: {}", err));
+        match result {
+            Ok(summary) => {
+                if let Some(handle) = app_handle {
+                    for filename in summary.skipped_files {
+                        if let Err(e) =
+                            DuplicateFileSkippedEvent::new(filename, None).emit(handle)
+                        {
+                            log::error!("Failed to emit DuplicateFileSkippedEvent: {}", e);
+                        }
+                    }
+                }
+            }
+            Err(err) => return Err(format!("Failed to import asset: {}", err)),
         }
     }
 
@@ -224,13 +238,18 @@ pub async fn import_additional_data<P>(
     id: Uuid,
     path: P,
     zip_extraction: bool,
+    app_handle: Option<&AppHandle>,
+    task_id: Uuid,
 ) -> Result<(), String>
 where
     P: AsRef<Path>,
 {
-    let asset_data_dir = {
+    let (asset_data_dir, hash_store) = {
         let store_provider = basic_store.lock().await;
-        store_provider.data_dir().join("data").join(id.to_string())
+        (
+            store_provider.data_dir().join("data").join(id.to_string()),
+            store_provider.get_asset_data_hash_store(),
+        )
     };
 
     let path = path.as_ref();
@@ -239,9 +258,27 @@ where
         return Err(format!("File or directory not found: {}", path.display()));
     }
 
-    fileutils::import_asset(path, &asset_data_dir, true, zip_extraction, |_, _| {})
-        .await
-        .map_err(|e| format!("Failed to import additional data for asset ({}): {}", id, e))?;
+    let summary = fileutils::import_asset(
+        path,
+        &asset_data_dir,
+        true,
+        zip_extraction,
+        id,
+        hash_store,
+        |_, _| {},
+    )
+    .await
+    .map_err(|e| format!("Failed to import additional data for asset ({}): {}", id, e))?;
+
+    if let Some(handle) = app_handle {
+        for filename in summary.skipped_files {
+            if let Err(e) =
+                DuplicateFileSkippedEvent::new(filename, Some(task_id)).emit(handle)
+            {
+                log::error!("Failed to emit DuplicateFileSkippedEvent: {}", e);
+            }
+        }
+    }
 
     Ok(())
 }
@@ -249,9 +286,11 @@ where
 async fn import_files(
     src: &PathBuf,
     dest: &PathBuf,
+    asset_id: Uuid,
+    hash_store: Arc<AssetDataHashStore>,
     progress_callback: impl Fn(f32, String),
     zip_extraction: bool,
-) -> Result<(), String> {
+) -> Result<fileutils::ImportSummary, String> {
     if !dest.exists() {
         std::fs::create_dir_all(dest)
             .map_err(|e| format!("Failed to create directory: {:?}", e))?;
@@ -259,13 +298,21 @@ async fn import_files(
 
     let mut delete_on_drop = DeleteOnDrop::new(dest.clone());
 
-    fileutils::import_asset(src, dest, false, zip_extraction, progress_callback)
-        .await
-        .map_err(|e| format!("Failed to import asset: {:?}", e))?;
+    let summary = fileutils::import_asset(
+        src,
+        dest,
+        false,
+        zip_extraction,
+        asset_id,
+        hash_store,
+        progress_callback,
+    )
+    .await
+    .map_err(|e| format!("Failed to import asset: {:?}", e))?;
 
     delete_on_drop.mark_as_completed();
 
-    Ok(())
+    Ok(summary)
 }
 
 async fn bind_temp_image(images_path: &PathBuf, temp_path_str: &str) -> Result<String, String> {

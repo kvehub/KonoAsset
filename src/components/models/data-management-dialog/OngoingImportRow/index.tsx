@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button'
-import { Ban, Check, Loader2 } from 'lucide-react'
+import { Ban, Check, Equal, Loader2 } from 'lucide-react'
 import { FC } from 'react'
 import { useLocalization } from '@/hooks/use-localization'
 import { useOngoingImportRow } from './hook'
@@ -11,7 +11,9 @@ type Props = {
 
 export const OngoingImportRow: FC<Props> = ({ taskId, filename }) => {
   const { t } = useLocalization()
-  const { status, onCancelButtonClick } = useOngoingImportRow({ taskId })
+  const { status, isDuplicate, onCancelButtonClick } = useOngoingImportRow({
+    taskId,
+  })
 
   return (
     <div className="w-full flex gap-2 items-center">
@@ -21,7 +23,18 @@ export const OngoingImportRow: FC<Props> = ({ taskId, filename }) => {
       {(status === 'Cancelled' || status === 'Failed') && (
         <Ban size={20} className="text-red-400" />
       )}
-      {status === 'Completed' && <Check size={24} className="text-green-600" />}
+      {status === 'Completed' &&
+        (isDuplicate ? (
+          <Equal
+            size={20}
+            className="text-yellow-500"
+            aria-label={t(
+              'assetcard:more-button:data-management:duplicate-skipped',
+            )}
+          />
+        ) : (
+          <Check size={24} className="text-green-600" />
+        ))}
       <p className="w-full truncate">
         {(status === 'Cancelled' || status === 'Failed') && (
           <span className="text-muted-foreground mr-2">

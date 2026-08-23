@@ -6,7 +6,7 @@ use deep_link::{
     definitions::{AddAssetDeepLink, StartupDeepLinkStore},
     execute_deep_links, parse_args_to_deep_links,
 };
-use definitions::entities::{InitialSetup, LoadResult, ProgressEvent};
+use definitions::entities::{DuplicateFileSkippedEvent, InitialSetup, LoadResult, ProgressEvent};
 use file::modify_guard::{self, FileTransferGuard};
 use language::LocalizationData;
 use model::preference::PreferenceStore;
@@ -35,6 +35,7 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 pub fn run() {
     let builder = generate_tauri_specta_builder().events(collect_events![
         ProgressEvent,
+        DuplicateFileSkippedEvent,
         TaskStatusChanged,
         AddAssetDeepLink,
         AssetVolumeEstimatedEvent,

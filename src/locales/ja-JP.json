@@ -125,6 +125,7 @@
     "assetcard:more-button:data-management:explanation-text-1": "データの追加や削除が行えます。高度な操作はエクスプローラーから行ってください。",
     "assetcard:more-button:data-management:add-file-or-folder": "ファイルかフォルダを追加する: ",
     "assetcard:more-button:data-management:explanation-text-2": "ウィンドウにファイルやフォルダをドロップしても新規追加できます",
+    "assetcard:more-button:data-management:duplicate-skipped": "同一内容のファイルが既に存在するためスキップされました",
     "assetcard:more-button:data-management:delete-description": "本当にデータを削除しますか？",
     "assetcard:more-button:open-booth": "BOOTHで開く",
     "assetcard:more-button:open-booth:error-text": "BOOTH URLが設定されていません！",
@@ -411,6 +412,8 @@
     "quicktag:popover:create": "新規タグ:",
     "quicktag:popover:empty": "タグがありません",
     "quicktag:chip:exit": "タグ付けモードを終了",
-    "quicktag:toast:failed": "タグの更新に失敗しました"
+    "quicktag:toast:failed": "タグの更新に失敗しました",
+    "duplicate-import:skipped-toast:title": "重複ファイルをスキップしました",
+    "duplicate-import:skipped-toast:description": "{count}件の同一内容のファイルは既に存在するため、インポートをスキップしました。"
   }
 }
