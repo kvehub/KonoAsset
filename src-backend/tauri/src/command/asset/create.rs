@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use model::preference::PreferenceStore;
+use model::{kve_preference::KvePreferenceStore, preference::PreferenceStore};
 use storage::asset_storage::AssetStorage;
 use task::TaskContainer;
 use tauri::{AppHandle, State, async_runtime::Mutex};
@@ -21,6 +21,7 @@ pub async fn request_avatar_import(
     basic_store: State<'_, Arc<Mutex<AssetStorage>>>,
     task_container: State<'_, Arc<Mutex<TaskContainer>>>,
     preference: State<'_, Arc<Mutex<PreferenceStore>>>,
+    kve_preference: State<'_, Arc<Mutex<KvePreferenceStore>>>,
     handle: State<'_, AppHandle>,
     request: AssetImportRequest<PreAvatar>,
 ) -> Result<Uuid, String> {
@@ -34,6 +35,7 @@ pub async fn request_avatar_import(
         let preference = preference.lock().await;
         (preference.zip_extraction, preference.use_trash_bin)
     };
+    let duplicate_check = { kve_preference.lock().await.duplicate_check };
 
     let task = task_container.lock().await.run(async move {
         let basic_store = cloned_basic_store.lock().await;
@@ -43,6 +45,7 @@ pub async fn request_avatar_import(
             &cloned_app_handle,
             zip_extraction,
             use_trash_bin,
+            duplicate_check,
         )
         .await;
 
@@ -65,6 +68,7 @@ pub async fn request_avatar_wearable_import(
     basic_store: State<'_, Arc<Mutex<AssetStorage>>>,
     task_container: State<'_, Arc<Mutex<TaskContainer>>>,
     preference: State<'_, Arc<Mutex<PreferenceStore>>>,
+    kve_preference: State<'_, Arc<Mutex<KvePreferenceStore>>>,
     handle: State<'_, AppHandle>,
     request: AssetImportRequest<PreAvatarWearable>,
 ) -> Result<Uuid, String> {
@@ -81,6 +85,7 @@ pub async fn request_avatar_wearable_import(
         let preference = preference.lock().await;
         (preference.zip_extraction, preference.use_trash_bin)
     };
+    let duplicate_check = { kve_preference.lock().await.duplicate_check };
 
     let task = task_container.lock().await.run(async move {
         let basic_store = cloned_basic_store.lock().await;
@@ -90,6 +95,7 @@ pub async fn request_avatar_wearable_import(
             &cloned_app_handle,
             zip_extraction,
             use_trash_bin,
+            duplicate_check,
         )
         .await;
 
@@ -114,6 +120,7 @@ pub async fn request_world_object_import(
     basic_store: State<'_, Arc<Mutex<AssetStorage>>>,
     task_container: State<'_, Arc<Mutex<TaskContainer>>>,
     preference: State<'_, Arc<Mutex<PreferenceStore>>>,
+    kve_preference: State<'_, Arc<Mutex<KvePreferenceStore>>>,
     handle: State<'_, AppHandle>,
     request: AssetImportRequest<PreWorldObject>,
 ) -> Result<Uuid, String> {
@@ -127,6 +134,7 @@ pub async fn request_world_object_import(
         let preference = preference.lock().await;
         (preference.zip_extraction, preference.use_trash_bin)
     };
+    let duplicate_check = { kve_preference.lock().await.duplicate_check };
 
     let task = task_container.lock().await.run(async move {
         let basic_store = cloned_basic_store.lock().await;
@@ -136,6 +144,7 @@ pub async fn request_world_object_import(
             &cloned_app_handle,
             zip_extraction,
             use_trash_bin,
+            duplicate_check,
         )
         .await;
 
@@ -157,6 +166,7 @@ pub async fn request_other_asset_import(
     basic_store: State<'_, Arc<Mutex<AssetStorage>>>,
     task_container: State<'_, Arc<Mutex<TaskContainer>>>,
     preference: State<'_, Arc<Mutex<PreferenceStore>>>,
+    kve_preference: State<'_, Arc<Mutex<KvePreferenceStore>>>,
     handle: State<'_, AppHandle>,
     request: AssetImportRequest<PreOtherAsset>,
 ) -> Result<Uuid, String> {
@@ -170,6 +180,7 @@ pub async fn request_other_asset_import(
         let preference = preference.lock().await;
         (preference.zip_extraction, preference.use_trash_bin)
     };
+    let duplicate_check = { kve_preference.lock().await.duplicate_check };
 
     let task = task_container.lock().await.run(async move {
         let basic_store = cloned_basic_store.lock().await;
@@ -179,6 +190,7 @@ pub async fn request_other_asset_import(
             &cloned_app_handle,
             zip_extraction,
             use_trash_bin,
+            duplicate_check,
         )
         .await;
 

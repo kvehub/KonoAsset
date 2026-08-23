@@ -1,4 +1,5 @@
 import { PreferenceContext } from '@/components/context/PreferenceContext'
+import { KvePreferenceContext } from '@/components/context/KvePreferenceContext'
 import { PreferenceTabIDs } from '@/pages/Preference/hook'
 
 import { TabsContent } from '@/components/ui/tabs'
@@ -16,6 +17,7 @@ import { LocalizationContext } from '@/components/context/LocalizationContext'
 import { ZipExtractionToggle } from '@/components/model-legacy/preference/ZipExtractionToggle'
 import { ThumbnailOptimizer } from '@/components/models/thumbnail-optimizer/ThumbnailOptimizer'
 import { UseTrashBinSelectorToggle } from '@/components/model-legacy/preference/UseTrashBinSelectorToggle'
+import { DuplicateCheckToggle } from '@/components/model-legacy/preference/DuplicateCheckToggle'
 
 type Props = {
   id: PreferenceTabIDs
@@ -23,6 +25,8 @@ type Props = {
 
 export const SettingsTab: FC<Props> = ({ id }) => {
   const { preference, setPreference } = useContext(PreferenceContext)
+  const { preference: kvePreference, setPreference: setKvePreference } =
+    useContext(KvePreferenceContext)
   const { data, loadBundledLanguageFile, loadLanguageFile } =
     useContext(LocalizationContext)
 
@@ -94,6 +98,15 @@ export const SettingsTab: FC<Props> = ({ id }) => {
           enable={preference.useTrashBin}
           setEnable={async (enable: boolean) => {
             await setPreference({ ...preference, useTrashBin: enable }, true)
+          }}
+        />
+        <DuplicateCheckToggle
+          enable={kvePreference.duplicateCheck}
+          setEnable={async (enable: boolean) => {
+            await setKvePreference(
+              { ...kvePreference, duplicateCheck: enable },
+              true,
+            )
           }}
         />
         <Separator />

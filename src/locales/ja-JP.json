@@ -343,6 +343,8 @@
 
     "preference:settings:use-trash-bin-selector": "ゴミ箱を使用する",
     "preference:settings:use-trash-bin-selector:explanation-text": "この設定が有効の場合、ファイルを削除するときにゴミ箱に移動されるようになります",
+    "preference:settings:duplicate-check": "重複ファイルチェックを行う",
+    "preference:settings:duplicate-check:explanation-text": "この設定が有効の場合、インポート時に同一内容のファイルが既に存在していれば取り込みをスキップします",
     "preference:settings:tag-management:title": "タグ管理",
     "preference:settings:tag-management:tag-label": "タグ",
     "preference:settings:tag-management:category-label": "カテゴリ",

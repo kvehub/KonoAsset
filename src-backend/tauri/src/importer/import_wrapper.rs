@@ -30,6 +30,7 @@ async fn import_asset<T, F>(
     register_fn: F,
     zip_extraction: bool,
     use_trash_bin: bool,
+    duplicate_check: bool,
 ) -> Result<T::AssetType, String>
 where
     T: PreAsset,
@@ -75,6 +76,7 @@ where
             &destination,
             asset.get_id(),
             hash_store.clone(),
+            duplicate_check,
             progress_callback,
             zip_extraction,
         )
@@ -135,6 +137,7 @@ pub async fn import_avatar(
     app_handle: &AppHandle,
     zip_extraction: bool,
     use_trash_bin: bool,
+    duplicate_check: bool,
 ) -> Result<Avatar, String> {
     import_asset(
         basic_store,
@@ -145,6 +148,7 @@ pub async fn import_avatar(
         },
         zip_extraction,
         use_trash_bin,
+        duplicate_check,
     )
     .await
 }
@@ -155,6 +159,7 @@ pub async fn import_avatar_wearable<T>(
     app_handle: &AppHandle,
     zip_extraction: bool,
     use_trash_bin: bool,
+    duplicate_check: bool,
 ) -> Result<AvatarWearable, String>
 where
     T: PreAsset<AssetType = AvatarWearable>,
@@ -173,6 +178,7 @@ where
         },
         zip_extraction,
         use_trash_bin,
+        duplicate_check,
     )
     .await
 }
@@ -183,6 +189,7 @@ pub async fn import_world_object<T>(
     app_handle: &AppHandle,
     zip_extraction: bool,
     use_trash_bin: bool,
+    duplicate_check: bool,
 ) -> Result<WorldObject, String>
 where
     T: PreAsset<AssetType = WorldObject>,
@@ -201,6 +208,7 @@ where
         },
         zip_extraction,
         use_trash_bin,
+        duplicate_check,
     )
     .await
 }
@@ -211,6 +219,7 @@ pub async fn import_other_asset<T>(
     app_handle: &AppHandle,
     zip_extraction: bool,
     use_trash_bin: bool,
+    duplicate_check: bool,
 ) -> Result<OtherAsset, String>
 where
     T: PreAsset<AssetType = OtherAsset>,
@@ -229,6 +238,7 @@ where
         },
         zip_extraction,
         use_trash_bin,
+        duplicate_check,
     )
     .await
 }
@@ -240,6 +250,7 @@ pub async fn import_additional_data<P>(
     zip_extraction: bool,
     app_handle: Option<&AppHandle>,
     task_id: Uuid,
+    duplicate_check: bool,
 ) -> Result<(), String>
 where
     P: AsRef<Path>,
@@ -265,6 +276,7 @@ where
         zip_extraction,
         id,
         hash_store,
+        duplicate_check,
         |_, _| {},
     )
     .await
@@ -288,6 +300,7 @@ async fn import_files(
     dest: &PathBuf,
     asset_id: Uuid,
     hash_store: Arc<AssetDataHashStore>,
+    duplicate_check: bool,
     progress_callback: impl Fn(f32, String),
     zip_extraction: bool,
 ) -> Result<fileutils::ImportSummary, String> {
@@ -305,6 +318,7 @@ async fn import_files(
         zip_extraction,
         asset_id,
         hash_store,
+        duplicate_check,
         progress_callback,
     )
     .await
@@ -391,6 +405,7 @@ mod tests {
             },
             true,
             false,
+            true,
         )
         .await
         .unwrap();

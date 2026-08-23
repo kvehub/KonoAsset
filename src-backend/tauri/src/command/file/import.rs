@@ -1,4 +1,4 @@
-use model::preference::PreferenceStore;
+use model::{kve_preference::KvePreferenceStore, preference::PreferenceStore};
 use std::sync::Arc;
 use storage::asset_storage::AssetStorage;
 use task::TaskContainer;
@@ -13,13 +13,15 @@ pub async fn import_file_entries_to_asset(
     basic_store: State<'_, Arc<Mutex<AssetStorage>>>,
     task_container: State<'_, Arc<Mutex<TaskContainer>>>,
     preference: State<'_, Arc<Mutex<PreferenceStore>>>,
+    kve_preference: State<'_, Arc<Mutex<KvePreferenceStore>>>,
     handle: State<'_, AppHandle>,
     asset_id: Uuid,
     paths: Vec<String>,
 ) -> Result<Vec<Uuid>, String> {
     let mut task_ids = vec![];
 
-    let zip_extraction = (*preference.lock().await).zip_extraction;
+    let zip_extraction = { preference.lock().await.zip_extraction };
+    let duplicate_check = { kve_preference.lock().await.duplicate_check };
 
     for path in paths {
         let basic_store = (*basic_store).clone();
@@ -45,6 +47,7 @@ pub async fn import_file_entries_to_asset(
                 zip_extraction,
                 Some(&cloned_app_handle),
                 task_id,
+                duplicate_check,
             )
             .await;
 

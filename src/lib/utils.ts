@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
-import { PreferenceStore, Result } from './bindings'
+import { KvePreferenceStore, PreferenceStore, Result } from './bindings'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -54,5 +54,11 @@ export const getDefaultPreferences = (): PreferenceStore => {
     useTrashBin: true,
     updateChannel: 'Stable',
     language: 'en-US',
+  }
+}
+
+export const getDefaultKvePreferences = (): KvePreferenceStore => {
+  return {
+    duplicateCheck: false,
   }
 }

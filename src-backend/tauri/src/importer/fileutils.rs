@@ -74,6 +74,9 @@ pub async fn import_asset<P, Q>(
     // に対応する、このアセットのID
     asset_id: Uuid,
     hash_store: Arc<AssetDataHashStore>,
+    // false の場合、重複ファイルチェック自体を行わない(ハッシュ計算やキャッシュの
+    // 読み書きも一切発生しない)。設定でユーザーが無効化できるようにするための引数。
+    duplicate_check: bool,
     progress_callback: impl Fn(f32, String),
 ) -> Result<ImportSummary, Box<dyn Error>>
 where
@@ -82,6 +85,17 @@ where
 {
     let src = src.as_ref();
     let dest = dest.as_ref();
+
+    if !duplicate_check {
+        return import_asset_without_dedup(
+            src,
+            dest,
+            cleanup_on_fail,
+            zip_extraction,
+            progress_callback,
+        )
+        .await;
+    }
 
     // 同一アセット(=同一 dest)への並行インポートが、重複チェック用ハッシュインデックスの
     // 構築で競合しないよう、dest単位でロックする
@@ -235,6 +249,103 @@ where
     Ok(ImportSummary { skipped_files })
 }
 
+/// `duplicate_check` 設定が無効な場合の実装。重複チェックを一切行わず、ハッシュ計算・
+/// キャッシュの読み書きも発生しない(機能追加前と同一の経路をそのまま通る)。
+async fn import_asset_without_dedup(
+    src: &Path,
+    dest: &Path,
+    cleanup_on_fail: bool,
+    zip_extraction: bool,
+    progress_callback: impl Fn(f32, String),
+) -> Result<ImportSummary, Box<dyn Error>> {
+    if src.is_dir() {
+        let file_name = src
+            .file_name()
+            .unwrap_or(OsStr::new("imported"))
+            .to_str()
+            .unwrap_or("imported");
+        let destination = select_destination_path(dest, file_name);
+
+        let delete_on_drop = if cleanup_on_fail {
+            Some(DeleteOnDrop::new(destination.clone()))
+        } else {
+            None
+        };
+
+        tokio::fs::create_dir_all(&destination).await?;
+
+        let src = src.to_path_buf();
+
+        modify_guard::copy_dir(
+            src,
+            destination,
+            false,
+            FileTransferGuard::none(),
+            progress_callback,
+        )
+        .await?;
+
+        if let Some(mut delete_on_drop) = delete_on_drop {
+            delete_on_drop.mark_as_completed();
+        }
+    } else {
+        let extension = src.extension();
+
+        if zip_extraction && extension == Some(OsStr::new("zip")) {
+            let file_stem = src
+                .file_stem()
+                .unwrap_or(OsStr::new("imported"))
+                .to_str()
+                .unwrap_or("imported");
+            let destination = select_destination_path(dest, file_stem);
+
+            let delete_on_drop = if cleanup_on_fail {
+                Some(DeleteOnDrop::new(destination.clone()))
+            } else {
+                None
+            };
+
+            tokio::fs::create_dir_all(&destination).await?;
+            zip::extract_zip(&src.to_path_buf(), &destination, progress_callback).await?;
+
+            if let Some(mut delete_on_drop) = delete_on_drop {
+                delete_on_drop.mark_as_completed();
+            }
+        } else {
+            let file_name = src
+                .file_name()
+                .unwrap_or(OsStr::new("imported"))
+                .to_str()
+                .unwrap_or("imported");
+            let destination = select_destination_path(dest, file_name);
+
+            let delete_on_drop = if cleanup_on_fail {
+                Some(DeleteOnDrop::new(destination.clone()))
+            } else {
+                None
+            };
+
+            progress_callback(0f32, file_name.to_string());
+
+            modify_guard::copy_file(
+                &src.to_path_buf(),
+                &destination,
+                false,
+                FileTransferGuard::none(),
+            )
+            .await?;
+
+            progress_callback(1f32, file_name.to_string());
+
+            if let Some(mut delete_on_drop) = delete_on_drop {
+                delete_on_drop.mark_as_completed();
+            }
+        }
+    }
+
+    Ok(ImportSummary::default())
+}
+
 fn select_destination_path<P, S>(base: P, prefer_filename: S) -> PathBuf
 where
     P: AsRef<Path>,
@@ -372,6 +483,7 @@ mod tests {
             true,
             asset_id,
             hash_store.clone(),
+            true,
             |_, _| {},
         )
         .await
@@ -383,6 +495,7 @@ mod tests {
             true,
             asset_id,
             hash_store.clone(),
+            true,
             |_, _| {},
         )
         .await
@@ -394,6 +507,7 @@ mod tests {
             true,
             asset_id,
             hash_store.clone(),
+            true,
             |_, _| {},
         )
         .await
@@ -446,6 +560,7 @@ mod tests {
             true,
             asset_id,
             hash_store.clone(),
+            true,
             |_, _| {},
         )
         .await
@@ -460,6 +575,7 @@ mod tests {
             true,
             asset_id,
             hash_store.clone(),
+            true,
             |_, _| {},
         )
         .await
@@ -499,6 +615,7 @@ mod tests {
             true,
             asset_id,
             hash_store.clone(),
+            true,
             |_, _| {},
         )
         .await
@@ -532,6 +649,7 @@ mod tests {
             true,
             asset_id,
             reloaded_store,
+            true,
             |_, _| {},
         )
         .await
@@ -573,6 +691,7 @@ mod tests {
             true,
             asset_id_a,
             hash_store.clone(),
+            true,
             |_, _| {},
         )
         .await
@@ -587,6 +706,7 @@ mod tests {
             true,
             asset_id_b,
             hash_store.clone(),
+            true,
             |_, _| {},
         )
         .await
@@ -629,6 +749,7 @@ mod tests {
             false,
             asset_id,
             hash_store,
+            true,
             move |progress, _filename| {
                 cloned_reported_progress.lock().unwrap().push(progress);
             },
@@ -639,5 +760,64 @@ mod tests {
         let reported_progress = reported_progress.lock().unwrap();
 
         assert_eq!(*reported_progress, vec![0f32, 1f32]);
+    }
+
+    #[tokio::test]
+    async fn test_import_asset_with_duplicate_check_disabled_imports_duplicates() {
+        let base = PathBuf::from("test/temp/import_asset_duplicate_check_disabled");
+
+        if std::fs::exists(&base).unwrap() {
+            std::fs::remove_dir_all(&base).unwrap();
+        }
+
+        let src_a = base.join("src/a.txt");
+        let src_b = base.join("src/b.txt");
+        let dest_root = base.join("dest_root");
+        let asset_id = Uuid::new_v4();
+        let dest = dest_root.join("data").join(asset_id.to_string());
+
+        std::fs::create_dir_all(src_a.parent().unwrap()).unwrap();
+        std::fs::create_dir_all(&dest).unwrap();
+
+        // 内容が同一の2ファイルを用意する
+        std::fs::write(&src_a, b"identical content").unwrap();
+        std::fs::write(&src_b, b"identical content").unwrap();
+
+        let hash_store = Arc::new(AssetDataHashStore::create(&dest_root).unwrap());
+
+        import_asset(
+            &src_a,
+            &dest,
+            true,
+            true,
+            asset_id,
+            hash_store.clone(),
+            false,
+            |_, _| {},
+        )
+        .await
+        .unwrap();
+
+        // duplicate_check=false なので、内容が同一でも重複扱いされず両方コピーされる
+        let summary_b = import_asset(
+            &src_b,
+            &dest,
+            true,
+            true,
+            asset_id,
+            hash_store.clone(),
+            false,
+            |_, _| {},
+        )
+        .await
+        .unwrap();
+
+        assert!(summary_b.skipped_files.is_empty());
+        assert!(dest.join("a.txt").exists());
+        assert!(dest.join("b.txt").exists());
+
+        // ハッシュキャッシュファイル自体も一切作られない(呼び出されないため)
+        let cache_path = dest_root.join("metadata").join("assetDataHashes.json");
+        assert!(!cache_path.exists());
     }
 }

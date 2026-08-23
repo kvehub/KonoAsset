@@ -3,6 +3,7 @@ mod base;
 mod summary;
 mod ui;
 
+pub mod kve_preference;
 pub mod preference;
 
 pub use base::AssetType;

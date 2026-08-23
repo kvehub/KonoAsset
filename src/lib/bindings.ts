@@ -404,6 +404,22 @@ async resetApplication(request: ResetApplicationRequest) : Promise<Result<null, 
 async getLogs() : Promise<LogEntry[]> {
     return await TAURI_INVOKE("get_logs");
 },
+async getKvePreferences() : Promise<Result<KvePreferenceStore, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_kve_preferences") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async setKvePreferences(newPreference: KvePreferenceStore) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("set_kve_preferences", { newPreference }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async getTaskStatus(id: string) : Promise<Result<TaskStatus, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("get_task_status", { id }) };
@@ -528,6 +544,20 @@ export type FilterRequest = { assetType: AssetType | null; queryText: string | n
 export type FilterRequirement<T> = { type: "Include"; data: T } | { type: "Exclude"; data: T }
 export type GetAssetResult = { assetType: AssetType; avatar: Avatar | null; avatarWearable: AvatarWearable | null; worldObject: WorldObject | null; otherAsset: OtherAsset | null }
 export type ImageOptimizationResult = { resized: number; deleted: number }
+/**
+ * KonoAssetKve(本フォーク)固有の設定を保持するストア。
+ * 
+ * 本家(upstream KonoAsset)の `preference.json` / `PreferenceStore` とは意図的に
+ * 完全に分離している。本家の設定ファイルはバージョン管理されたマイグレーション機構
+ * (`VersionedPreferences`)を持ち、本家との互換性を保つ必要があるため、フォーク独自の
+ * 設定をそこに混ぜると将来のマージや本家追従の妨げになる。そのため、フォーク独自の
+ * 設定は `preference_kve.json` という別ファイルに保存する。
+ */
+export type KvePreferenceStore = { 
+/**
+ * インポート時に、内容が同一のファイルが既に存在する場合はコピー/展開をスキップするか
+ */
+duplicateCheck: boolean }
 export type LanguageCode = "ja-JP" | "en-US" | "en-GB" | "zh-CN" | { "user-provided": string }
 export type LoadResult = { success: boolean; preferenceLoaded: boolean; message: string | null }
 export type LocalizationData = { language: LanguageCode; data: Partial<{ [key in string]: string }> }

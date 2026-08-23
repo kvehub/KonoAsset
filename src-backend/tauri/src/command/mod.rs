@@ -67,6 +67,9 @@ pub fn generate_tauri_specta_builder() -> Builder<tauri::Wry> {
         preference::common::set_preferences,
         preference::reset::reset_application,
         preference::logging::get_logs,
+        // KonoAssetKve 固有の設定関連
+        preference::kve_common::get_kve_preferences,
+        preference::kve_common::set_kve_preferences,
         // タスク関連
         task::commands::get_task_status,
         task::commands::cancel_task_request,

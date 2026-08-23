@@ -329,6 +329,8 @@
 
     "preference:settings:use-trash-bin-selector": "使用回收站",
     "preference:settings:use-trash-bin-selector:explanation-text": "启用后，删除的文件将被移至回收站",
+    "preference:settings:duplicate-check": "检查重复文件",
+    "preference:settings:duplicate-check:explanation-text": "启用后，导入时若已存在内容相同的文件将跳过导入",
 
     "preference:thumbnail-optimizer:optimize": "优化缩略图",
     "preference:thumbnail-optimizer:optimize:description": "调整过大缩略图的尺寸并删除不必要的文件，以节省磁盘空间",

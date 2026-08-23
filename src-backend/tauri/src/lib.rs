@@ -122,9 +122,15 @@ pub fn run() {
             };
 
             let preference_file_path = app_local_data_dir.join("preference.json");
+            let kve_preference_file_path = app_local_data_dir.join("preference_kve.json");
             let state_file_path = app_local_data_dir.join("state.json");
 
             app.manage(arc_mutex(InitialSetup::new(preference_file_path)));
+
+            let kve_pref_store = model::kve_preference::KvePreferenceStore::load(
+                &kve_preference_file_path,
+            );
+            app.manage(arc_mutex(kve_pref_store));
 
             let pref_store = match load_preference_store(app.handle(), &app_local_data_dir) {
                 Ok(pref_store) => pref_store,
