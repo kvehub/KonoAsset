@@ -1,3 +1,4 @@
+import { PreferenceContext } from '@/components/context/PreferenceContext'
 import { SimplifiedDirEntry } from '@/lib/bindings'
 import { useDataManagementDialogStore } from '@/stores/dialogs/DataManagementDialogStore'
 import { OngoingImportEntry } from '@/stores/dialogs/DataManagementDialogStore/index.types'
@@ -6,7 +7,7 @@ import { DragDropHandler } from '@/stores/DragDropStore/index.types'
 import { Event } from '@tauri-apps/api/event'
 import { DragDropEvent } from '@tauri-apps/api/window'
 import { open } from '@tauri-apps/plugin-dialog'
-import { useCallback, useEffect } from 'react'
+import { useCallback, useContext, useEffect } from 'react'
 
 type ReturnProps = {
   isOpen: boolean
@@ -18,12 +19,16 @@ type ReturnProps = {
   entries: SimplifiedDirEntry[]
   ongoingImports: OngoingImportEntry[]
 
+  deleteSourceChecked: boolean
+  setDeleteSourceChecked: (checked: boolean) => void
+
   onAddButtonClick: (isDir: boolean) => Promise<void>
   refreshEntries: () => Promise<void>
 }
 
 export const useDataManagementDialog = (): ReturnProps => {
   const { register } = useDragDropStore()
+  const { preference, setPreference } = useContext(PreferenceContext)
   const {
     id,
     isOpen,
@@ -34,6 +39,14 @@ export const useDataManagementDialog = (): ReturnProps => {
     importItems,
     refreshEntries,
   } = useDataManagementDialogStore()
+
+  const deleteSourceChecked = preference.deleteOnImport
+  const setDeleteSourceChecked = useCallback(
+    (checked: boolean) => {
+      setPreference({ ...preference, deleteOnImport: checked }, true)
+    },
+    [preference, setPreference],
+  )
 
   const onAddButtonClick = useCallback(
     async (isDir: boolean) => {
@@ -50,9 +63,9 @@ export const useDataManagementDialog = (): ReturnProps => {
         return
       }
 
-      await importItems(paths)
+      await importItems(paths, deleteSourceChecked)
     },
-    [id, importItems],
+    [id, importItems, deleteSourceChecked],
   )
 
   // ドラッグアンドドロップのイベントハンドラーを登録する
@@ -73,10 +86,10 @@ export const useDataManagementDialog = (): ReturnProps => {
         return false
       }
 
-      await importItems(paths)
+      await importItems(paths, deleteSourceChecked)
       return true
     },
-    [isOpen, importItems],
+    [isOpen, importItems, deleteSourceChecked],
   )
 
   useEffect(() => {
@@ -96,6 +109,8 @@ export const useDataManagementDialog = (): ReturnProps => {
     id,
     entries,
     ongoingImports,
+    deleteSourceChecked,
+    setDeleteSourceChecked,
     onAddButtonClick,
     refreshEntries,
   }

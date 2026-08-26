@@ -10,6 +10,8 @@ export const DataManagementDialog: FC = () => {
     loading,
     entries,
     ongoingImports,
+    deleteSourceChecked,
+    setDeleteSourceChecked,
     onAddButtonClick,
     refreshEntries,
   } = useDataManagementDialog()
@@ -21,6 +23,8 @@ export const DataManagementDialog: FC = () => {
       id={loading ? null : id}
       entries={entries}
       ongoingImports={ongoingImports}
+      deleteSourceChecked={deleteSourceChecked}
+      setDeleteSourceChecked={setDeleteSourceChecked}
       refreshEntries={refreshEntries}
       onAddButtonClick={onAddButtonClick}
     />

@@ -105,10 +105,22 @@ where
     }
 
     if request.delete_source {
+        let data_dir = basic_store.data_dir();
+
         for i in 0..file_count {
             let path: PathBuf = PathBuf::from(request.absolute_paths.get(i).unwrap());
 
             if !path.exists() {
+                continue;
+            }
+
+            // アセットのデータ管理ディレクトリ自体からドラッグ&ドロップされた
+            // ファイル/フォルダを誤って削除しないようにガードする
+            if modify_guard::is_within(&path, &data_dir).unwrap_or(false) {
+                log::warn!(
+                    "Skipping deletion of source path because it is inside the managed asset data directory: {}",
+                    path.display()
+                );
                 continue;
             }
 
@@ -251,15 +263,18 @@ pub async fn import_additional_data<P>(
     app_handle: Option<&AppHandle>,
     task_id: Uuid,
     duplicate_check: bool,
+    delete_source: bool,
+    use_trash_bin: bool,
 ) -> Result<(), String>
 where
     P: AsRef<Path>,
 {
-    let (asset_data_dir, hash_store) = {
+    let (asset_data_dir, hash_store, managed_data_dir) = {
         let store_provider = basic_store.lock().await;
         (
             store_provider.data_dir().join("data").join(id.to_string()),
             store_provider.get_asset_data_hash_store(),
+            store_provider.data_dir(),
         )
     };
 
@@ -289,6 +304,32 @@ where
             {
                 log::error!("Failed to emit DuplicateFileSkippedEvent: {}", e);
             }
+        }
+    }
+
+    if delete_source && path.exists() {
+        // アセットのデータ管理ディレクトリ自体からドラッグ&ドロップされた
+        // ファイル/フォルダを誤って削除しないようにガードする
+        if modify_guard::is_within(path, &managed_data_dir).unwrap_or(false) {
+            log::warn!(
+                "Skipping deletion of source path because it is inside the managed asset data directory: {}",
+                path.display()
+            );
+            return Ok(());
+        }
+
+        let guard = DeletionGuard::new(path.to_path_buf());
+
+        let result = if use_trash_bin {
+            modify_guard::trash_recursive(path, &guard)
+        } else {
+            modify_guard::delete_recursive_completely(path, &guard)
+                .await
+                .map_err(|e| format!("Failed to delete src: {}", e))
+        };
+
+        if let Err(err) = result {
+            return Err(format!("Failed to delete src: {}", err));
         }
     }
 

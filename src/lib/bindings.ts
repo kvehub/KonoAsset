@@ -289,9 +289,9 @@ async openLogsDir() : Promise<Result<null, string>> {
     else return { status: "error", error: e  as any };
 }
 },
-async importFileEntriesToAsset(assetId: string, paths: string[]) : Promise<Result<string[], string>> {
+async importFileEntriesToAsset(assetId: string, paths: string[], deleteSource: boolean) : Promise<Result<string[], string>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("import_file_entries_to_asset", { assetId, paths }) };
+    return { status: "ok", data: await TAURI_INVOKE("import_file_entries_to_asset", { assetId, paths, deleteSource }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };

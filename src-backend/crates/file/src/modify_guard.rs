@@ -76,6 +76,25 @@ where
     }
 }
 
+/// `path` が `ancestor` と同一、またはその子孫であるかどうかを判定する。
+///
+/// インポート後の元ファイル削除機能で、誤ってアセットのデータ管理ディレクトリ
+/// 自体からドラッグ&ドロップされたファイル/フォルダを削除してしまわないよう、
+/// 削除対象がアプリの管理下にあるディレクトリの内部かどうかを事前に確認するために使う。
+/// 両方のパスは比較前に絶対パスへ変換される。
+pub fn is_within<P1, P2>(path: P1, ancestor: P2) -> Result<bool, String>
+where
+    P1: AsRef<Path>,
+    P2: AsRef<Path>,
+{
+    let path_absolute = std::path::absolute(&path)
+        .map_err(|e| format!("Failed to convert path to absolute path: {:?}", e))?;
+    let ancestor_absolute = std::path::absolute(&ancestor)
+        .map_err(|e| format!("Failed to convert ancestor path to absolute path: {:?}", e))?;
+
+    Ok(path_absolute.starts_with(&ancestor_absolute))
+}
+
 pub struct FileTransferGuard {
     src_must_be_parent: Option<PathBuf>,
     dest_must_be_parent: Option<PathBuf>,
@@ -759,5 +778,40 @@ mod tests {
             final_count, FILE_COUNT as u64,
             "progress_callback should be invoked once per copied entry"
         );
+    }
+
+    #[test]
+    fn test_is_within_true_for_descendant() {
+        let dir = get_test_dir();
+        let ancestor = dir.join("is_within_true_ancestor");
+        let descendant = ancestor.join("nested").join("file.txt");
+
+        assert!(is_within(&descendant, &ancestor).unwrap());
+    }
+
+    #[test]
+    fn test_is_within_true_for_same_path() {
+        let dir = get_test_dir();
+        let path = dir.join("is_within_true_same_path");
+
+        assert!(is_within(&path, &path).unwrap());
+    }
+
+    #[test]
+    fn test_is_within_false_for_unrelated_path() {
+        let dir = get_test_dir();
+        let ancestor = dir.join("is_within_false_ancestor");
+        let unrelated = dir.join("is_within_false_unrelated");
+
+        assert!(!is_within(&unrelated, &ancestor).unwrap());
+    }
+
+    #[test]
+    fn test_is_within_false_for_parent_of_ancestor() {
+        let dir = get_test_dir();
+        let ancestor = dir.join("is_within_false_parent_ancestor");
+
+        // dir 自体は ancestor の親であり、子孫ではないため false になる
+        assert!(!is_within(&dir, &ancestor).unwrap());
     }
 }

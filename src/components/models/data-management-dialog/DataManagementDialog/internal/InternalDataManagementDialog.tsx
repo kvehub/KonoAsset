@@ -16,6 +16,8 @@ import { SimplifiedDirEntry } from '@/lib/bindings'
 import { OngoingImportEntry } from '@/stores/dialogs/DataManagementDialogStore/index.types'
 import { DirEntryRow } from '../../DirEntryRow'
 import { OngoingImportRow } from '../../OngoingImportRow'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Label } from '@/components/ui/label'
 
 type Props = {
   isOpen: boolean
@@ -25,6 +27,9 @@ type Props = {
   id: string | null
   entries: SimplifiedDirEntry[]
   ongoingImports: OngoingImportEntry[]
+
+  deleteSourceChecked: boolean
+  setDeleteSourceChecked: (checked: boolean) => void
 
   refreshEntries: () => Promise<void>
   onAddButtonClick: (isDir: boolean) => Promise<void>
@@ -36,6 +41,8 @@ export const InternalDataManagementDialog: FC<Props> = ({
   id,
   entries,
   ongoingImports,
+  deleteSourceChecked,
+  setDeleteSourceChecked,
   refreshEntries,
   onAddButtonClick,
 }) => {
@@ -97,6 +104,20 @@ export const InternalDataManagementDialog: FC<Props> = ({
           <Button variant="secondary" onClick={() => onAddButtonClick(true)}>
             <Folder />
           </Button>
+        </div>
+        <div className="flex justify-center items-center">
+          <Checkbox
+            id="data-management-delete-source"
+            className="cursor-pointer disabled:cursor-not-allowed"
+            checked={deleteSourceChecked}
+            onCheckedChange={setDeleteSourceChecked}
+          />
+          <Label
+            htmlFor="data-management-delete-source"
+            className="ml-2 cursor-pointer"
+          >
+            {t('addasset:additional-input:delete-source')}
+          </Label>
         </div>
         <div className="flex gap-1 justify-center items-center">
           <InfoIcon className="size-6 text-primary" />

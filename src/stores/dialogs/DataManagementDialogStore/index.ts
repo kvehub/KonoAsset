@@ -14,7 +14,7 @@ type Props = {
   entries: SimplifiedDirEntry[]
   ongoingImports: OngoingImportEntry[]
 
-  importItems: (path: string[]) => Promise<void>
+  importItems: (path: string[], deleteSource: boolean) => Promise<void>
   refreshEntries: () => Promise<void>
   onTaskCompleted: (taskId: string) => void
 }
@@ -57,14 +57,18 @@ export const useDataManagementDialogStore = create<Props>((set, get) => ({
   entries: [],
   ongoingImports: [],
 
-  importItems: async (paths: string[]) => {
+  importItems: async (paths: string[], deleteSource: boolean) => {
     const id = get().id
 
     if (id === null) {
       return
     }
 
-    const result = await commands.importFileEntriesToAsset(id, paths)
+    const result = await commands.importFileEntriesToAsset(
+      id,
+      paths,
+      deleteSource,
+    )
 
     if (result.status === 'ok') {
       const taskIds = result.data

@@ -17,10 +17,14 @@ pub async fn import_file_entries_to_asset(
     handle: State<'_, AppHandle>,
     asset_id: Uuid,
     paths: Vec<String>,
+    delete_source: bool,
 ) -> Result<Vec<Uuid>, String> {
     let mut task_ids = vec![];
 
-    let zip_extraction = { preference.lock().await.zip_extraction };
+    let (zip_extraction, use_trash_bin) = {
+        let preference = preference.lock().await;
+        (preference.zip_extraction, preference.use_trash_bin)
+    };
     let duplicate_check = { kve_preference.lock().await.duplicate_check };
 
     for path in paths {
@@ -48,6 +52,8 @@ pub async fn import_file_entries_to_asset(
                 Some(&cloned_app_handle),
                 task_id,
                 duplicate_check,
+                delete_source,
+                use_trash_bin,
             )
             .await;
 

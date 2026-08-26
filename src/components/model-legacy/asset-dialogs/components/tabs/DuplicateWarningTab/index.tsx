@@ -19,6 +19,10 @@ import {
 } from '@/components/ui/tooltip'
 import { commands } from '@/lib/bindings'
 import { useToast } from '@/hooks/use-toast'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Label } from '@/components/ui/label'
+import { PreferenceContext } from '@/components/context/PreferenceContext'
+
 type Props = {
   setTab: (tab: string) => void
 
@@ -39,9 +43,18 @@ export const DuplicateWarningTab = ({
   const { assetPaths, duplicateWarningItems } = useContext(
     AddAssetDialogContext,
   )
+  const { preference, setPreference } = useContext(PreferenceContext)
 
   const { open: openDataManagementDialog, importItems } =
     useDataManagementDialogStore()
+
+  const deleteSourceChecked = preference.deleteOnImport
+  const setDeleteSourceChecked = useCallback(
+    (checked: boolean) => {
+      setPreference({ ...preference, deleteOnImport: checked }, true)
+    },
+    [preference, setPreference],
+  )
 
   const importEntriesAs = useCallback(
     async (assetId: string) => {
@@ -52,9 +65,15 @@ export const DuplicateWarningTab = ({
       closeDialog()
       openDataManagementDialog(assetId)
 
-      await importItems(assetPaths)
+      await importItems(assetPaths, deleteSourceChecked)
     },
-    [assetPaths, openDataManagementDialog, importItems, closeDialog],
+    [
+      assetPaths,
+      openDataManagementDialog,
+      importItems,
+      closeDialog,
+      deleteSourceChecked,
+    ],
   )
 
   const openFolder = useCallback(
@@ -120,6 +139,20 @@ export const DuplicateWarningTab = ({
             </div>
           ))}
         </TooltipProvider>
+      </div>
+      <div className="flex justify-center items-center">
+        <Checkbox
+          id="duplicate-warning-delete-source"
+          className="cursor-pointer disabled:cursor-not-allowed"
+          checked={deleteSourceChecked}
+          onCheckedChange={setDeleteSourceChecked}
+        />
+        <Label
+          htmlFor="duplicate-warning-delete-source"
+          className="ml-2 cursor-pointer"
+        >
+          {t('addasset:additional-input:delete-source')}
+        </Label>
       </div>
       <DialogFooter className="mt-8">
         <Button
