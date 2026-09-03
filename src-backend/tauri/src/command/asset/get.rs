@@ -123,6 +123,11 @@ pub async fn get_sorted_asset_summaries(
                 .unwrap_or(0)
                 .cmp(&b.published_at.unwrap_or(0))
         }),
+        SortBy::BoothId => result.sort_by(|a, b| {
+            a.booth_item_id
+                .unwrap_or(0)
+                .cmp(&b.booth_item_id.unwrap_or(0))
+        }),
     }
 
     Ok(result)

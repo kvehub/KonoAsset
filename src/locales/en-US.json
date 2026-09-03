@@ -160,6 +160,8 @@
     "mainnavbar:sort-settings:shop-name-desc": "Shop name (Z-A)",
     "mainnavbar:sort-settings:published-at-desc": "Product release date (newest first)",
     "mainnavbar:sort-settings:published-at-asc": "Product release date (oldest first)",
+    "mainnavbar:sort-settings:booth-id-desc": "Booth ID (highest first)",
+    "mainnavbar:sort-settings:booth-id-asc": "Booth ID (lowest first)",
     "mainnavbar:size-settings:title": "Display size",
     "mainnavbar:size-settings:large": "Large",
     "mainnavbar:size-settings:medium": "Medium",

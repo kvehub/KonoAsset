@@ -160,6 +160,8 @@
     "mainnavbar:sort-settings:shop-name-desc": "ショップ名 (Z-A順)",
     "mainnavbar:sort-settings:published-at-desc": "商品公開日 (新しいものから)",
     "mainnavbar:sort-settings:published-at-asc": "商品公開日 (古いものから)",
+    "mainnavbar:sort-settings:booth-id-desc": "Booth ID (大きいものから)",
+    "mainnavbar:sort-settings:booth-id-asc": "Booth ID (小さいものから)",
     "mainnavbar:size-settings:title": "表示サイズ",
     "mainnavbar:size-settings:large": "大",
     "mainnavbar:size-settings:medium": "中",

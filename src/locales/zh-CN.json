@@ -160,6 +160,8 @@
     "mainnavbar:sort-settings:shop-name-desc": "商店名称（Z-A）",
     "mainnavbar:sort-settings:published-at-desc": "商品发布时间（从新到旧）",
     "mainnavbar:sort-settings:published-at-asc": "商品发布时间（从旧到新）",
+    "mainnavbar:sort-settings:booth-id-desc": "Booth ID（从大到小）",
+    "mainnavbar:sort-settings:booth-id-asc": "Booth ID（从小到大）",
     "mainnavbar:size-settings:title": "显示尺寸",
     "mainnavbar:size-settings:large": "大",
     "mainnavbar:size-settings:medium": "中",

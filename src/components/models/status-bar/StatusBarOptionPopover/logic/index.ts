@@ -34,6 +34,12 @@ export const handleSortByChange = ({
     case 'PublishedAtAsc':
       setSort('PublishedAt', false)
       break
+    case 'BoothIdDesc':
+      setSort('BoothId', true)
+      break
+    case 'BoothIdAsc':
+      setSort('BoothId', false)
+      break
   }
 }
 
@@ -47,5 +53,7 @@ export const convertToSelectID = (sortBy: SortBy, reverseOrder: boolean) => {
       return reverseOrder ? 'CreatorDesc' : 'CreatorAsc'
     case 'PublishedAt':
       return reverseOrder ? 'PublishedAtDesc' : 'PublishedAtAsc'
+    case 'BoothId':
+      return reverseOrder ? 'BoothIdDesc' : 'BoothIdAsc'
   }
 }

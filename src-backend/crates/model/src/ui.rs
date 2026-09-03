@@ -7,6 +7,7 @@ pub enum SortBy {
     #[default]
     CreatedAt,
     PublishedAt,
+    BoothId,
 }
 
 #[derive(Default, Serialize, Deserialize, Debug, Eq, PartialEq, Clone, specta::Type)]

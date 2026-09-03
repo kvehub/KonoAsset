@@ -74,6 +74,20 @@ export const StatusBarOptionSortSection: FC<Props> = ({ value, setValue }) => {
       >
         {t('mainnavbar:sort-settings:published-at-asc')}
       </StatusBarOptionSelectButton>
+      <StatusBarOptionSelectButton
+        value="BoothIdDesc"
+        setter={setValue}
+        current={value}
+      >
+        {t('mainnavbar:sort-settings:booth-id-desc')}
+      </StatusBarOptionSelectButton>
+      <StatusBarOptionSelectButton
+        value="BoothIdAsc"
+        setter={setValue}
+        current={value}
+      >
+        {t('mainnavbar:sort-settings:booth-id-asc')}
+      </StatusBarOptionSelectButton>
     </div>
   )
 }
