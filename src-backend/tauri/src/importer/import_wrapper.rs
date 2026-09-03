@@ -24,7 +24,7 @@ use crate::definitions::{
 use super::fileutils::{self, execute_image_fixation};
 
 async fn import_asset<T, F>(
-    basic_store: &AssetStorage,
+    basic_store: Arc<Mutex<AssetStorage>>,
     mut request: AssetImportRequest<T>,
     app_handle: Option<&AppHandle>,
     register_fn: F,
@@ -35,14 +35,23 @@ async fn import_asset<T, F>(
 where
     T: PreAsset,
     F: FnOnce(
-        &AssetStorage,
+        Arc<Mutex<AssetStorage>>,
         T::AssetType,
-    ) -> Pin<Box<dyn Future<Output = Result<(), String>> + Send + '_>>,
+    ) -> Pin<Box<dyn Future<Output = Result<(), String>> + Send>>,
 {
+    // ここで取得するのは必要な値だけにとどめ、ロックはすぐ解放する。
+    // ファイルコピーや削除など時間のかかる処理の間ロックを保持し続けると、
+    // 他のコマンド（一覧取得や別のインポートなど）が待たされ、
+    // アプリ全体が固まったように見えてしまうため。
+    let (data_dir, hash_store) = {
+        let store = basic_store.lock().await;
+        (store.data_dir(), store.get_asset_data_hash_store())
+    };
+
     let image_filename = request.pre_asset.description().image_filename.as_ref();
 
     if let Some(image_filename) = image_filename {
-        let images_path = basic_store.data_dir().join("images");
+        let images_path = data_dir.join("images");
         let new_filename = bind_temp_image(&images_path, image_filename).await?;
 
         request.pre_asset.description().image_filename = Some(new_filename);
@@ -50,16 +59,12 @@ where
 
     let asset = request.pre_asset.create();
     let file_count = request.absolute_paths.len();
-    let hash_store = basic_store.get_asset_data_hash_store();
 
     for i in 0..file_count {
         let path_str = request.absolute_paths.get(i).unwrap();
 
         let src_import_asset_path: PathBuf = PathBuf::from(path_str);
-        let destination = basic_store
-            .data_dir()
-            .join("data")
-            .join(asset.get_id().to_string());
+        let destination = data_dir.join("data").join(asset.get_id().to_string());
 
         let progress_callback = |progress, filename| {
             if let Some(handle) = app_handle {
@@ -98,6 +103,7 @@ where
         }
     }
 
+    // 登録処理（JSONへの保存）の間だけ再度ロックを取得する。
     let result = register_fn(basic_store, asset.clone()).await;
 
     if let Err(err) = result {
@@ -105,8 +111,6 @@ where
     }
 
     if request.delete_source {
-        let data_dir = basic_store.data_dir();
-
         for i in 0..file_count {
             let path: PathBuf = PathBuf::from(request.absolute_paths.get(i).unwrap());
 
@@ -144,7 +148,7 @@ where
 }
 
 pub async fn import_avatar(
-    basic_store: &AssetStorage,
+    basic_store: Arc<Mutex<AssetStorage>>,
     request: AssetImportRequest<PreAvatar>,
     app_handle: &AppHandle,
     zip_extraction: bool,
@@ -155,8 +159,11 @@ pub async fn import_avatar(
         basic_store,
         request,
         Some(app_handle),
-        |provider: &'_ AssetStorage, asset: Avatar| {
-            Box::pin(async { provider.get_avatar_store().add_asset_and_save(asset).await })
+        |provider: Arc<Mutex<AssetStorage>>, asset: Avatar| {
+            Box::pin(async move {
+                let provider = provider.lock().await;
+                provider.get_avatar_store().add_asset_and_save(asset).await
+            })
         },
         zip_extraction,
         use_trash_bin,
@@ -166,7 +173,7 @@ pub async fn import_avatar(
 }
 
 pub async fn import_avatar_wearable<T>(
-    basic_store: &AssetStorage,
+    basic_store: Arc<Mutex<AssetStorage>>,
     request: AssetImportRequest<T>,
     app_handle: &AppHandle,
     zip_extraction: bool,
@@ -180,8 +187,9 @@ where
         basic_store,
         request,
         Some(app_handle),
-        |provider: &'_ AssetStorage, asset: AvatarWearable| {
-            Box::pin(async {
+        |provider: Arc<Mutex<AssetStorage>>, asset: AvatarWearable| {
+            Box::pin(async move {
+                let provider = provider.lock().await;
                 provider
                     .get_avatar_wearable_store()
                     .add_asset_and_save(asset)
@@ -196,7 +204,7 @@ where
 }
 
 pub async fn import_world_object<T>(
-    basic_store: &AssetStorage,
+    basic_store: Arc<Mutex<AssetStorage>>,
     request: AssetImportRequest<T>,
     app_handle: &AppHandle,
     zip_extraction: bool,
@@ -210,8 +218,9 @@ where
         basic_store,
         request,
         Some(app_handle),
-        |provider: &'_ AssetStorage, asset: WorldObject| {
-            Box::pin(async {
+        |provider: Arc<Mutex<AssetStorage>>, asset: WorldObject| {
+            Box::pin(async move {
+                let provider = provider.lock().await;
                 provider
                     .get_world_object_store()
                     .add_asset_and_save(asset)
@@ -226,7 +235,7 @@ where
 }
 
 pub async fn import_other_asset<T>(
-    basic_store: &AssetStorage,
+    basic_store: Arc<Mutex<AssetStorage>>,
     request: AssetImportRequest<T>,
     app_handle: &AppHandle,
     zip_extraction: bool,
@@ -240,8 +249,9 @@ where
         basic_store,
         request,
         Some(app_handle),
-        |provider: &'_ AssetStorage, asset: OtherAsset| {
-            Box::pin(async {
+        |provider: Arc<Mutex<AssetStorage>>, asset: OtherAsset| {
+            Box::pin(async move {
+                let provider = provider.lock().await;
                 provider
                     .get_other_asset_store()
                     .add_asset_and_save(asset)
@@ -400,7 +410,7 @@ mod tests {
             std::fs::remove_dir_all(test_root_dir).unwrap();
         }
 
-        let provider = AssetStorage::create(&data_dir).unwrap();
+        let provider = Arc::new(Mutex::new(AssetStorage::create(&data_dir).unwrap()));
 
         std::fs::create_dir_all(format!("{data_dir}/images")).unwrap();
         std::fs::write(format!("{data_dir}/images/temp_image.png"), b"").unwrap();
@@ -438,11 +448,14 @@ mod tests {
         };
 
         let avatar = import_asset(
-            &provider,
+            provider.clone(),
             request,
             None,
-            |provider: &'_ AssetStorage, asset: Avatar| {
-                Box::pin(async { provider.get_avatar_store().add_asset_and_save(asset).await })
+            |provider: Arc<Mutex<AssetStorage>>, asset: Avatar| {
+                Box::pin(async move {
+                    let provider = provider.lock().await;
+                    provider.get_avatar_store().add_asset_and_save(asset).await
+                })
             },
             true,
             false,
@@ -472,6 +485,8 @@ mod tests {
         assert!(std::fs::exists(avatar_json_path).unwrap());
 
         let registered_avatar = provider
+            .lock()
+            .await
             .get_avatar_store()
             .get_asset(id.clone())
             .await

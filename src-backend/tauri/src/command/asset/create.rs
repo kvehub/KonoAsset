@@ -38,9 +38,8 @@ pub async fn request_avatar_import(
     let duplicate_check = { kve_preference.lock().await.duplicate_check };
 
     let task = task_container.lock().await.run(async move {
-        let basic_store = cloned_basic_store.lock().await;
         let result = import_avatar(
-            &basic_store,
+            cloned_basic_store,
             request,
             &cloned_app_handle,
             zip_extraction,
@@ -88,9 +87,8 @@ pub async fn request_avatar_wearable_import(
     let duplicate_check = { kve_preference.lock().await.duplicate_check };
 
     let task = task_container.lock().await.run(async move {
-        let basic_store = cloned_basic_store.lock().await;
         let result = import_avatar_wearable(
-            &basic_store,
+            cloned_basic_store,
             request,
             &cloned_app_handle,
             zip_extraction,
@@ -137,9 +135,8 @@ pub async fn request_world_object_import(
     let duplicate_check = { kve_preference.lock().await.duplicate_check };
 
     let task = task_container.lock().await.run(async move {
-        let basic_store = cloned_basic_store.lock().await;
         let result = import_world_object(
-            &basic_store,
+            cloned_basic_store,
             request,
             &cloned_app_handle,
             zip_extraction,
@@ -183,9 +180,8 @@ pub async fn request_other_asset_import(
     let duplicate_check = { kve_preference.lock().await.duplicate_check };
 
     let task = task_container.lock().await.run(async move {
-        let basic_store = cloned_basic_store.lock().await;
         let result = import_other_asset(
-            &basic_store,
+            cloned_basic_store,
             request,
             &cloned_app_handle,
             zip_extraction,
