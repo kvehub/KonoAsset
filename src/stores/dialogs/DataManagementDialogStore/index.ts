@@ -93,10 +93,16 @@ export const useDataManagementDialogStore = create<Props>((set, get) => ({
       return
     }
 
-    const ongoingImports = current.ongoingImports.filter(
+    const entries = await listDirEntries(current.id)
+
+    // await の間に importItems 等で ongoingImports が更新されている
+    // 可能性があるため、フィルタ対象は await の後に改めて取得する。
+    // ここで await 前の値を使うと、後から追加されたエントリが
+    // 古い値で上書きされて消えてしまう（例: 重複警告ダイアログから
+    // 追加した際にステータスが表示されない不具合の原因だった）。
+    const ongoingImports = get().ongoingImports.filter(
       (entry) => entry.completed === false,
     )
-    const entries = await listDirEntries(current.id)
 
     set({ entries: entries ?? [], ongoingImports })
   },
