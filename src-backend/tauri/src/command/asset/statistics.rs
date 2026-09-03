@@ -69,3 +69,13 @@ pub async fn get_volume_statistics_cache(
     let statistics_cache = statistics_cache.lock().await;
     Ok(statistics_cache.get().cloned())
 }
+
+#[tauri::command]
+#[specta::specta]
+pub async fn invalidate_volume_statistics_cache(
+    statistics_cache: State<'_, Arc<Mutex<AssetVolumeStatisticsCache>>>,
+) -> Result<(), String> {
+    let mut statistics_cache = statistics_cache.lock().await;
+    statistics_cache.clear();
+    Ok(())
+}

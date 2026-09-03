@@ -17,6 +17,7 @@ export const StatisticsTab: FC<Props> = ({ id }) => {
     assetRegistrationAreaChartData,
     assetVolumeStatistics,
     loadingAssetVolumeStatistics,
+    reloadAssetVolumeStatistics,
     total,
     avatars,
     avatarWearables,
@@ -71,6 +72,7 @@ export const StatisticsTab: FC<Props> = ({ id }) => {
         <AssetDiskSizeBarChart
           data={assetVolumeStatistics}
           loading={loadingAssetVolumeStatistics}
+          onReload={reloadAssetVolumeStatistics}
         />
         <div className="h-2" />
       </div>

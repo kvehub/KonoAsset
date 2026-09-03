@@ -1,186 +1,189 @@
 'use client'
 
 import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  LabelList,
-  XAxis,
-  YAxis,
-} from 'recharts'
-
-import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import {
-  ChartConfig,
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from '@/components/ui/chart'
-import { AssetVolumeStatistics } from '@/lib/bindings'
-import { Loader2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { AssetVolumeStatistics, commands } from '@/lib/bindings'
+import { Folder, RefreshCcw } from 'lucide-react'
 import { useLocalization } from '@/hooks/use-localization'
+import { RowVirtualScroll } from '@/components/ui/virtual-scroll'
+import { cn } from '@/lib/utils'
 
 type Props = {
   data: AssetVolumeStatistics[]
   loading: boolean
+  onReload: () => void
+  className?: string
 }
 
-export const AssetDiskSizeBarChart: React.FC<Props> = ({ data, loading }) => {
+// 1行あたりの高さ (px)
+const ROW_HEIGHT = 32
+// 補助線 (目盛り) のおおよその本数の目安。実際の本数はキリの良い数値になるよう
+// 前後することがある
+const TARGET_TICK_COUNT = 5
+
+export const AssetDiskSizeBarChart: React.FC<Props> = ({
+  data,
+  loading,
+  onReload,
+  className,
+}) => {
   const { t } = useLocalization()
 
-  const chartConfig = {
-    asset: {
-      label: 'Size',
-      color: 'var(--chart-1)',
-    },
-  } satisfies ChartConfig
+  // 全アイテム中の最大サイズ (データは sizeInBytes 降順でソートされている前提)
+  const maxSize = data.length > 0 ? data[0].sizeInBytes : 0
 
-  const height = data.length * 30
+  const { ticks, niceMaxBytes } = computeSizeTicks(maxSize)
 
   return (
-    <Card className="flex flex-col w-full shrink">
-      <CardHeader>
+    <Card className={cn('flex flex-col w-full h-screen shrink-0', className)}>
+      <CardHeader className="shrink-0">
         <CardTitle>
           <div className="flex flex-row items-center gap-2">
             {t('preference:statistics:volume-bar-chart:title')}
-            {loading && (
-              <Loader2 className="animate-spin text-muted-foreground size-6" />
-            )}
+            <Button
+              variant="secondary"
+              className="h-7 w-7"
+              onClick={onReload}
+              disabled={loading}
+              title={t('preference:statistics:volume-bar-chart:reload')}
+            >
+              <RefreshCcw className={loading ? 'animate-spin' : undefined} />
+            </Button>
           </div>
         </CardTitle>
         <CardDescription>
           {t('preference:statistics:volume-bar-chart:description')}
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <ChartContainer
-          config={chartConfig}
-          className="flex w-full shrink"
-          style={{
-            height: height,
-          }}
-        >
-          <BarChart
-            accessibilityLayer
-            data={data}
-            layout="vertical"
-            margin={{
-              right: 60,
-            }}
-            barSize={25}
-          >
-            <CartesianGrid horizontal={false} />
-            <YAxis
-              dataKey="name"
-              type="category"
-              tickLine={false}
-              tickMargin={10}
-              axisLine={false}
-              tickFormatter={(value) => value.slice(0, 3)}
-              hide
-            />
-            <XAxis dataKey="sizeInBytes" type="number" hide />
-            <ChartTooltip
-              cursor={false}
-              content={
-                <ChartTooltipContent
-                  indicator="line"
-                  formatter={(value, _, item) => {
-                    return (
-                      <div>
-                        <p className="font-bold">{item.payload.name}</p>
-                        <div className="flex flex-row gap-2">
-                          <p className="text-muted-foreground">
-                            {t('preference:statistics:volume-bar-chart:size')}
-                          </p>
-                          <p>{bytesFormatter(value as number)}</p>
-                        </div>
-                      </div>
-                    )
-                  }}
-                />
-              }
-            />
-            <Bar
-              dataKey="sizeInBytes"
-              layout="vertical"
-              fill="var(--color-avatar-wearable)"
-              radius={4}
-              animationDuration={loading ? 0 : 500}
-            >
-              {data.map((entry, index) => (
-                <Cell
-                  key={`cell-${index}`}
-                  fill={
-                    entry.assetType === 'Avatar'
-                      ? 'var(--avatar)'
-                      : entry.assetType === 'AvatarWearable'
-                        ? 'var(--avatar-wearable)'
-                        : entry.assetType === 'WorldObject'
-                          ? 'var(--world-object)'
-                          : 'var(--other-asset)'
-                  }
-                />
+      <CardContent className="flex-1 min-h-0 flex flex-col">
+        {ticks.length > 0 && (
+          <div className="flex items-center gap-2 pb-1 shrink-0">
+            <div className="relative flex-1 h-4">
+              {ticks.map((tick) => (
+                <span
+                  key={tick.value}
+                  className="absolute top-0 -translate-x-1/2 text-[10px] text-muted-foreground first:translate-x-0 last:-translate-x-full"
+                  style={{ left: `${tick.percent}%` }}
+                >
+                  {tick.label}
+                </span>
               ))}
-              <LabelList
-                dataKey="name"
-                position="insideLeft"
-                offset={8}
-                className="fill-primary-foreground"
-                fontSize={12}
-                content={(props) => {
-                  const { index, x, y, height, offset, value, width } = props
-                  const item = data[index!]
-
-                  let fillColor = 'var(--foreground)'
-
-                  if (item.assetType === 'Avatar') {
-                    fillColor = 'var(--avatar-foreground)'
-                  } else if (item.assetType === 'AvatarWearable') {
-                    fillColor = 'var(--avatar-wearable-foreground)'
-                  } else if (item.assetType === 'WorldObject') {
-                    fillColor = 'var(--world-object-foreground)'
-                  } else if (item.assetType === 'OtherAsset') {
-                    fillColor = 'var(--other-asset-foreground)'
-                  }
-
-                  return (
-                    <text
-                      x={((x ?? 0) as number) + (offset as number)}
-                      y={(y as number) + (height as number) / 2}
-                      dominantBaseline="middle"
-                      fill={fillColor}
-                      textAnchor="start"
-                    >
-                      {truncateText(value, width as number)}
-                    </text>
-                  )
-                }}
-              />
-              <LabelList
-                dataKey="sizeInBytes"
-                position="right"
-                offset={8}
-                className="fill-foreground"
-                fontSize={12}
-                width={75}
-                formatter={(value: number) => {
-                  return bytesFormatter(value)
-                }}
-              />
-            </Bar>
-          </BarChart>
-        </ChartContainer>
+            </div>
+            <div className="w-20 shrink-0" />
+          </div>
+        )}
+        <div className="relative flex-1 min-h-0">
+          {ticks.length > 0 && (
+            <div className="absolute inset-0 flex pointer-events-none">
+              <div className="relative flex-1">
+                {ticks.map((tick) => (
+                  <div
+                    key={tick.value}
+                    className="absolute inset-y-0 border-l border-border/60"
+                    style={{ left: `${tick.percent}%` }}
+                  />
+                ))}
+              </div>
+              <div className="w-20 shrink-0" />
+            </div>
+          )}
+          <RowVirtualScroll
+            items={data}
+            estimateSize={ROW_HEIGHT}
+            overscan={10}
+            className="h-full px-0"
+            renderItem={(item) => (
+              <AssetVolumeBarRow item={item} maxSize={niceMaxBytes} />
+            )}
+          />
+        </div>
       </CardContent>
     </Card>
   )
+}
+
+type AssetVolumeBarRowProps = {
+  item: AssetVolumeStatistics
+  maxSize: number
+}
+
+const AssetVolumeBarRow: React.FC<AssetVolumeBarRowProps> = ({
+  item,
+  maxSize,
+}) => {
+  const { t } = useLocalization()
+
+  // ごく小さいアイテムでもアイコン・名前が視認できるよう最小幅を確保する
+  const percent =
+    maxSize > 0 ? Math.max((item.sizeInBytes / maxSize) * 100, 6) : 0
+
+  const { barColor, foregroundColor } = getAssetTypeColors(item.assetType)
+
+  const onOpenFolder = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    commands.openManagedDir(item.id)
+  }
+
+  return (
+    <div className="flex items-center gap-2 h-[24px]">
+      <div className="relative flex-1 h-full min-w-0">
+        <div
+          className="absolute inset-y-0 left-0 rounded-sm flex items-center gap-1.5 px-1.5 overflow-hidden"
+          style={{ width: `${percent}%`, backgroundColor: barColor }}
+          title={`${item.name} (${bytesFormatter(item.sizeInBytes)})`}
+        >
+          <button
+            type="button"
+            className="shrink-0 flex items-center justify-center cursor-pointer"
+            style={{ color: foregroundColor }}
+            onClick={onOpenFolder}
+            title={t('assetcard:open-button:open-dir')}
+          >
+            <Folder className="size-3.5" />
+          </button>
+          <span className="truncate text-xs" style={{ color: foregroundColor }}>
+            {item.name}
+          </span>
+        </div>
+      </div>
+      <div className="w-20 shrink-0 text-right text-xs text-foreground tabular-nums">
+        {bytesFormatter(item.sizeInBytes)}
+      </div>
+    </div>
+  )
+}
+
+const getAssetTypeColors = (
+  assetType: AssetVolumeStatistics['assetType'],
+): { barColor: string; foregroundColor: string } => {
+  switch (assetType) {
+    case 'Avatar':
+      return {
+        barColor: 'var(--avatar)',
+        foregroundColor: 'var(--avatar-foreground)',
+      }
+    case 'AvatarWearable':
+      return {
+        barColor: 'var(--avatar-wearable)',
+        foregroundColor: 'var(--avatar-wearable-foreground)',
+      }
+    case 'WorldObject':
+      return {
+        barColor: 'var(--world-object)',
+        foregroundColor: 'var(--world-object-foreground)',
+      }
+    default:
+      return {
+        barColor: 'var(--other-asset)',
+        foregroundColor: 'var(--other-asset-foreground)',
+      }
+  }
 }
 
 const bytesFormatter = (value: number) => {
@@ -195,30 +198,94 @@ const bytesFormatter = (value: number) => {
   }
 }
 
-const truncateText = (text: string | number | undefined, width: number) => {
-  const strText = `${text}`
-  let totalWidth = 0
-  let endIndex = 0
+type SizeTick = {
+  value: number
+  label: string
+  percent: number
+}
 
-  for (let i = 0; i < strText.length; i++) {
-    // Check if the character is full-width (CJK characters, etc.)
-    const charWidth = /[\u3000-\u9fff\uff00-\uffef]/.test(strText[i]) ? 10 : 6
+// サイズが属する単位 (KB/MB/GB/TB) を決定するための閾値テーブル
+const BYTE_UNITS: { unit: string; bytes: number }[] = [
+  { unit: 'TB', bytes: 1024 ** 4 },
+  { unit: 'GB', bytes: 1024 ** 3 },
+  { unit: 'MB', bytes: 1024 ** 2 },
+  { unit: 'KB', bytes: 1024 },
+  { unit: 'Bytes', bytes: 1 },
+]
 
-    if (totalWidth + charWidth > width - 30) {
-      break
+const pickByteUnit = (maxBytes: number) => {
+  for (const candidate of BYTE_UNITS) {
+    if (maxBytes >= candidate.bytes) {
+      return candidate
     }
+  }
+  return BYTE_UNITS[BYTE_UNITS.length - 1]
+}
 
-    totalWidth += charWidth
-    endIndex = i + 1
+// Heckbert の "Nice Numbers for Graph Labels" アルゴリズム。
+// 与えられた値に近い、人間にとってキリの良い数値 (1, 2, 5 の倍率) を返す
+const niceNumber = (value: number, round: boolean): number => {
+  if (value <= 0) return 0
+
+  const exponent = Math.floor(Math.log10(value))
+  const fraction = value / 10 ** exponent
+
+  let niceFraction: number
+
+  if (round) {
+    if (fraction < 1.5) niceFraction = 1
+    else if (fraction < 3) niceFraction = 2
+    else if (fraction < 7) niceFraction = 5
+    else niceFraction = 10
+  } else {
+    if (fraction <= 1) niceFraction = 1
+    else if (fraction <= 2) niceFraction = 2
+    else if (fraction <= 5) niceFraction = 5
+    else niceFraction = 10
   }
 
-  if (endIndex === 0) {
-    return ''
+  return niceFraction * 10 ** exponent
+}
+
+const formatTickValue = (value: number) => {
+  return (Math.round(value * 100) / 100).toString()
+}
+
+// チャートの最大サイズから、キリが良く本数も多すぎない補助線 (目盛り) を算出する
+const computeSizeTicks = (
+  maxBytes: number,
+): { ticks: SizeTick[]; niceMaxBytes: number } => {
+  if (maxBytes <= 0) {
+    return { ticks: [], niceMaxBytes: 0 }
   }
 
-  if (endIndex < strText.length) {
-    return strText.slice(0, endIndex) + '...'
+  const unit = pickByteUnit(maxBytes)
+  const maxInUnit = maxBytes / unit.bytes
+
+  const rawStep = niceNumber(maxInUnit / (TARGET_TICK_COUNT - 1), true)
+
+  if (rawStep <= 0) {
+    return { ticks: [], niceMaxBytes: 0 }
   }
 
-  return text
+  const niceMaxInUnit = Math.ceil(maxInUnit / rawStep) * rawStep
+  const niceMaxBytes = niceMaxInUnit * unit.bytes
+
+  const ticks: SizeTick[] = []
+
+  for (
+    let current = 0;
+    current <= niceMaxInUnit + rawStep * 0.001;
+    current += rawStep
+  ) {
+    const rounded = Math.round(current * 100) / 100
+
+    ticks.push({
+      value: rounded * unit.bytes,
+      label: `${formatTickValue(rounded)} ${unit.unit}`,
+      percent: (rounded / niceMaxInUnit) * 100,
+    })
+  }
+
+  return { ticks, niceMaxBytes }
 }

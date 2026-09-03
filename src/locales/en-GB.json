@@ -275,6 +275,7 @@
     "preference:statistics:volume-bar-chart:title": "Disk Space Usage by Asset",
     "preference:statistics:volume-bar-chart:description": "Total disc space used by registered asset files",
     "preference:statistics:volume-bar-chart:size": "Size",
+    "preference:statistics:volume-bar-chart:reload": "Recalculate",
 
     "preference:logs:open-logs-folder": "Open folder",
 

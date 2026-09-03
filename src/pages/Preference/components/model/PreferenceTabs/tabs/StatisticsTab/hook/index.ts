@@ -12,6 +12,7 @@ type ReturnProps = {
   assetRegistrationAreaChartData: AssetRegistrationStatistics[]
   assetVolumeStatistics: AssetVolumeStatistics[]
   loadingAssetVolumeStatistics: boolean
+  reloadAssetVolumeStatistics: () => void
 
   total: number
   avatars: number
@@ -83,6 +84,32 @@ export const useStatisticsTab = (): ReturnProps => {
     })
   }
 
+  // ディスク容量の計算タスクを開始する
+  // (バックエンド側でキャッシュが存在する場合は計算をスキップし、即座に完了扱いになる)
+  const runVolumeStatisticsCalculation = async () => {
+    setLoadingAssetVolumeStatistics(true)
+
+    const taskExecutionResult =
+      await commands.executeVolumeStatisticsCalculationTask()
+
+    if (taskExecutionResult.status === 'error') {
+      console.error(taskExecutionResult.error)
+      setLoadingAssetVolumeStatistics(false)
+    }
+  }
+
+  // リロードボタンから呼び出される、明示的な再計算
+  const reloadAssetVolumeStatistics = async () => {
+    const invalidateResult = await commands.invalidateVolumeStatisticsCache()
+
+    if (invalidateResult.status === 'error') {
+      console.error(invalidateResult.error)
+      return
+    }
+
+    await runVolumeStatisticsCalculation()
+  }
+
   useEffect(() => {
     let isCancelled = false
     let unlistenCompleteFn: UnlistenFn | undefined = undefined
@@ -111,23 +138,21 @@ export const useStatisticsTab = (): ReturnProps => {
         return
       }
 
-      const taskExecutionResult =
-        await commands.executeVolumeStatisticsCalculationTask()
+      // 既にキャッシュが存在する場合はそれを表示するのみで、再計算は行わない
+      const cacheResult = await commands.getVolumeStatisticsCache()
 
-      if (taskExecutionResult.status === 'error') {
-        console.error(taskExecutionResult.error)
-        return
-      }
-
-      const result = await commands.getVolumeStatisticsCache()
-
-      if (result.status === 'ok' && result.data !== null) {
+      if (cacheResult.status === 'ok' && cacheResult.data !== null) {
         setAssetVolumeStatistics(
-          result.data.sort((a, b) => b.sizeInBytes - a.sizeInBytes),
+          cacheResult.data.sort((a, b) => b.sizeInBytes - a.sizeInBytes),
         )
         setLoadingAssetVolumeStatistics(false)
         return
       }
+
+      if (isCancelled) return
+
+      // キャッシュが存在しない場合 (初回起動時など) のみ自動で計算する
+      await runVolumeStatisticsCalculation()
     }
 
     setupListener()
@@ -142,6 +167,7 @@ export const useStatisticsTab = (): ReturnProps => {
     assetRegistrationAreaChartData,
     assetVolumeStatistics: throttledAssetVolumeStatistics,
     loadingAssetVolumeStatistics,
+    reloadAssetVolumeStatistics,
     total: avatars + avatarWearables + worldObjects + otherAssets,
     avatars,
     avatarWearables,

@@ -275,6 +275,7 @@
     "preference:statistics:volume-bar-chart:title": "各资产磁盘空间占用",
     "preference:statistics:volume-bar-chart:description": "已注册资产文件占用的总磁盘空间",
     "preference:statistics:volume-bar-chart:size": "大小",
+    "preference:statistics:volume-bar-chart:reload": "重新计算",
 
     "preference:logs:open-logs-folder": "打开日志文件夹",
 
