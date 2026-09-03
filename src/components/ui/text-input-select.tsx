@@ -3,6 +3,7 @@
 import { Command as CommandPrimitive } from 'cmdk'
 import * as React from 'react'
 import { forwardRef, useEffect } from 'react'
+import { X } from 'lucide-react'
 import {
   Command,
   CommandGroup,
@@ -32,6 +33,7 @@ interface TextInputSelectProps {
   onChange?: (value: string) => void
   disabled?: boolean
   className?: string
+  clearable?: boolean
   inputProps?: Omit<
     React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>,
     'value' | 'placeholder' | 'disabled'
@@ -86,6 +88,7 @@ const TextInputSelect = forwardRef<TextInputSelectRef, TextInputSelectProps>(
       emptyIndicator,
       disabled,
       className,
+      clearable = false,
       triggerSearchOnFocus = false,
       inputProps,
     },
@@ -273,6 +276,12 @@ const TextInputSelect = forwardRef<TextInputSelectRef, TextInputSelectProps>(
       [onChange],
     )
 
+    const handleClear = () => {
+      setInputValue('')
+      onChange?.('')
+      inputRef.current?.focus()
+    }
+
     const CreatableItem = () => {
       const trimmedInput = inputValue.trim()
 
@@ -314,7 +323,7 @@ const TextInputSelect = forwardRef<TextInputSelectRef, TextInputSelectProps>(
             className={cn(
               'min-h-10 rounded-md dark:bg-input/30 border border-input text-sm ring-offset-background',
               'transition-[color,box-shadow] focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px]',
-              'px-3 py-2',
+              'px-3 py-2 flex items-center',
               {
                 'cursor-text': !disabled,
               },
@@ -363,6 +372,20 @@ const TextInputSelect = forwardRef<TextInputSelectRef, TextInputSelectProps>(
                 inputProps?.className,
               )}
             />
+            {clearable && !disabled && inputValue && (
+              <button
+                type="button"
+                aria-label={t('general:button:clear')}
+                onMouseDown={(e) => {
+                  // Prevent the input from losing focus before onClick fires
+                  e.preventDefault()
+                }}
+                onClick={handleClear}
+                className="ml-2 shrink-0 rounded-xs opacity-70 hover:opacity-100"
+              >
+                <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+              </button>
+            )}
           </div>
           {open && (
             <CommandList

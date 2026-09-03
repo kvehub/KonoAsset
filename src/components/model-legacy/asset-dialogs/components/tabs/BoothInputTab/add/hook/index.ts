@@ -82,6 +82,7 @@ export const useBoothInputTabForAddDialog = ({
         boothItemId: boothItemId,
         form: form,
         setImageUrls,
+        applyCategory: true,
       })
 
       if (result.status === 'ok') {

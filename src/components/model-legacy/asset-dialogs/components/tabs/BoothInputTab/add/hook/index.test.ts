@@ -117,6 +117,10 @@ describe('BoothInputTab Hook', () => {
 
     expect(mockSetTab).toHaveBeenCalledTimes(1)
     expect(mockSetTab.mock.calls[0][0]).toEqual('asset-type-selector')
+    // Category should be auto-applied for normal registration, same as quick registration
+    expect(getAndSetAssetInfoFromBoothToForm).toHaveBeenCalledWith(
+      expect.objectContaining({ applyCategory: true }),
+    )
 
     // Duplication Case
     act(() => {

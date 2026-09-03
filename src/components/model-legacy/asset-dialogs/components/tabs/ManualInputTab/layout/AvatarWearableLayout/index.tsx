@@ -148,6 +148,7 @@ export const AvatarWearableLayout = ({ form }: Props) => {
             options={categoryCandidates}
             placeholder={t('addasset:category:placeholder')}
             className="max-w-72"
+            clearable
             emptyIndicator={
               <p className="text-center text-lg text-muted-foreground">
                 {t('addasset:empty-indicator')}
